@@ -1,0 +1,5 @@
+{
+ 	"MaxJumpChargeTime": 0.2,
+	"DashSpeed": 100,
+	"DashCooldown": 1.5
+}

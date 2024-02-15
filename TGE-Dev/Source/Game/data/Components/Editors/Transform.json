@@ -1,0 +1,25 @@
+{
+  "Entity/Transform/Scale": {
+    "Type": "DragFloat3",
+    "Data": {
+      "Speed": 0.1,
+      "Format": "%.3f"
+    }
+  },
+  "Entity/Transform/Translation": {
+    "Type": "DragFloat3",
+    "Data": {
+      "Speed": 1,
+      "Format": "%.3f"
+    }
+  },
+  "Entity/Transform/Rotation": {
+    "Type": "DragFloat3",
+    "Data": {
+      "Speed": 0.0122718463,
+      "Min": -3.14159265359,
+      "Max": 3.14159265359,
+      "Format": "%.3f"
+    }
+  }
+}

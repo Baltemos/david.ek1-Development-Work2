@@ -1,0 +1,5 @@
+{
+  "MovementSpeed": 400.0,
+  "myAttackRange" : 40,
+  "myAttackCooldown": 0.4
+}

@@ -1,0 +1,1 @@
+{"Batch":[{"Children":[],"Components":[{"Data":null,"Type":"Transform"},{"Data":null,"Type":"Camera"},{"Data":null,"Type":"FreeCamera"},{"Data":null,"Type":"EditorManager"},{"Data":null,"Type":"EditorEntityManager"},{"Data":null,"Type":"EditorUnityManager"}],"IsReference":false,"Name":"EditorManager"}],"UnityBatch":null}

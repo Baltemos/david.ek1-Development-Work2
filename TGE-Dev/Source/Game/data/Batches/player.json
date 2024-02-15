@@ -1,0 +1,116 @@
+[
+  {
+    "Components": [
+      {
+        "Data": {
+          "Translation": [
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Type": "Transform"
+      },
+      {
+        "Data": {
+          "Color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "Size": [
+            100.0,
+            100.0
+          ],
+          "Sprite": "tga_w",
+          "SpriteFile": "Sprites/tga_w.dds",
+          "Texture": "Sprites\\t_playerPlaceholder_2.png",
+          "TextureRect": [
+            0.0,
+            0.0,
+            1.0,
+            1.0
+          ]
+        },
+        "Type": "SpriteRenderer2D"
+      },
+      {
+        "Data": null,
+        "Type": "Camera"
+      },
+      {
+        "Data": null,
+        "Type": "PlayerInput"
+      },
+      {
+        "Data": null,
+        "Type": "Physicbody"
+      },
+      {
+        "Data": null,
+        "Type": "RectangleCollider"
+      },
+      {
+        "Data": null,
+        "Type": "CreatureMovementObserver"
+      },
+      {
+        "Data": null,
+        "Type": "PlayerMovementObserver"
+      },
+      {
+        "Data": {
+          "Tag": "Player"
+        },
+        "Type": "Tag"
+      }
+    ],
+    "IsReference": false,
+    "Name": "Player",
+    "Children": []
+  },
+  {
+    "Components": [
+      {
+        "Data": {
+          "Translation": [
+            144.0,
+            56.0,
+            0.0
+          ]
+        },
+        "Type": "Transform"
+      },
+      {
+        "Data": {
+          "Color": [
+            1.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "Size": [
+            100.0,
+            250.0
+          ],
+          "Sprite": "White",
+          "SpriteFile": "Sprites/White.png",
+          "Texture": "Sprites\\White.png"
+        },
+        "Type": "SpriteRenderer2D"
+      },
+      {
+        "Data": null,
+        "Type": "Physicbody"
+      },
+      {
+        "Data": null,
+        "Type": "RectangleCollider"
+      }
+    ],
+    "IsReference": false,
+    "Name": "Obstacle",
+    "Children": []
+  }
+]

@@ -1,0 +1,38 @@
+[
+  {
+    "ID": "error",
+    "Texture": "Sprites/error.dds",
+    "NormalMap": null,
+    "CustomShader": null
+  },
+  {
+    "ID": "tga_w",
+    "Texture": "Sprites/tga_w.dds",
+    "NormalMap": null,
+    "CustomShader": null
+  },
+  {
+    "ID": "tge_logo_b",
+    "Texture": "Sprites/tge_logo_b.dds",
+    "NormalMap": null,
+    "CustomShader": null
+  },
+  {
+    "ID": "tge_logo_w",
+    "Texture": "Sprites/tge_logo_w.dds",
+    "NormalMap": null,
+    "CustomShader": null
+  },
+  {
+    "ID": "player",
+    "Texture": "Sprites/t_playerPlaceholder_2.png",
+    "NormalMap": null,
+    "CustomShader": null
+  },
+  {
+    "ID": "White",
+    "Texture": "Sprites/White.png",
+    "NormalMap": null,
+    "CustomShader": null
+  }
+]

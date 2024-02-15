@@ -1,0 +1,8 @@
+{
+  "IsStatic": false,
+  "IsTrigger": false,
+  "Bounds": {
+    "Min": [ -16, -16 ],
+    "Max": [ 16, 16 ]
+  }
+}

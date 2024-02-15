@@ -1,0 +1,1 @@
+{"Batch":[{"Children":[],"Components":[{"Data":{},"Type":"Transform"},{"Data":null,"Type":"Camera"}],"IsPrefab":false,"Name":"Camera"},{"Children":[],"Components":[{"Data":null,"Type":"Transform"},{"Data":null,"Type":"SpriteRenderer2D"}],"IsPrefab":true,"Name":"TestPrefab","PrefabPath":"Entities/TestPrefab.json"}],"UnityBatch":null}

@@ -1,0 +1,8 @@
+{
+  "IsStatic": false,
+  "IsTrigger": false,
+  "Bounds": {
+    "Offset": [ 0.0, 0.0 ],
+    "Radius": 32.0
+  }
+}

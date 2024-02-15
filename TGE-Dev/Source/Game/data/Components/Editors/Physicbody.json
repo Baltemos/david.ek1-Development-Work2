@@ -1,0 +1,8 @@
+{
+  "Entity/Physicbody/Velocity": {
+    "Type": "InputFloat2",
+    "Data": {
+      "Format": "%.2f"
+    }
+  }
+}

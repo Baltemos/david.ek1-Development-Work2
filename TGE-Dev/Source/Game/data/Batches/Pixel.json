@@ -1,0 +1,18 @@
+[
+  {
+    "Components": [
+      {
+        "Data": null,
+        "Type": "Transform"
+      },
+      {
+        "Data": {
+          "Sprite": "White"
+        },
+        "Type": "SpriteRenderer2D"
+      }
+    ],
+    "Name": "Pixel",
+    "Children": []
+  }
+]

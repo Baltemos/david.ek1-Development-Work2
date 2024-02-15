@@ -1,0 +1,1 @@
+{"Children":[],"Components":[{"Data":{"Translation":[-28.04534912109375,1.3141937255859375,0.0]},"Type":"Transform"},{"Data":{"Size":[64.0,64.0],"Texture":"Sprites\\DebugCircle.png"},"Type":"SpriteRenderer2D"},{"Data":{"Tag":"aTag"},"Type":"Tag"}],"Name":"SomeThing"}

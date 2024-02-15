@@ -1,0 +1,92 @@
+[
+  {
+    "Children": [
+    ],
+    "Components": [
+      {
+        "Data": {
+          "Translation": [
+            -32.0,
+            0.0,
+            0.0
+          ]
+        },
+        "Type": "Transform"
+      },
+      {
+        "Data": {
+          "Pivot": [
+            0.0,
+            1.0
+          ],
+          "Texture": "Sprites\\t_playerPlaceholder_2.png"
+        },
+        "Type": "SpriteRenderer2D"
+      },
+      {
+        "Data": null,
+        "Type": "Camera"
+      },
+      {
+        "Data": null,
+        "Type": "Physicbody"
+      },
+      {
+        "Data": null,
+        "Type": "RectangleCollider"
+      },
+      {
+        "Data": {
+          "Tag": "Player"
+        },
+        "Type": "Tag"
+      },
+      {
+        "Data": null,
+        "Type": "PlayerInput"
+      },
+      {
+        "Data": null,
+        "Type": "PlayerMovementObserver"
+      }
+    ],
+    "IsReference": false,
+    "Name": "Player"
+  },
+  {
+    "Children": [
+    ],
+    "Components": [
+      {
+        "Data": {
+          "Translation": [
+            100.0,
+            100.0,
+            0.0
+          ]
+        },
+        "Type": "Transform"
+      },
+      {
+        "Data": {
+          "Size": [
+            100.0,
+            100.0
+          ],
+          "Texture": "Sprites/White.png"
+        },
+        "Type": "SpriteRenderer2D"
+      },
+      {
+        "Data": null,
+        "Type": "RectangleCollider"
+      },
+      {
+        "Data": null,
+        "Type": "Physicbody"
+      }
+    ],
+    "IsReference": false,
+    "Name": "N/A"
+  }
+]

@@ -1,0 +1,37 @@
+{
+  "Entity/SpriteRenderer2D/Texture": {
+    "Type": "InputFilePath",
+    "Data": {
+      "DefaultDirectory": "data/Sprites",
+      "Filter": "Image Files (*.png;*.dds)|*.png;*.dds|All Files (*.*)|*.*"
+    }
+  },
+  "Entity/SpriteRenderer2D/Size": {
+    "Type": "InputFloat2",
+    "Data": {
+      "Format": "%.0f"
+    }
+  },
+  "Entity/SpriteRenderer2D/SizeMultiplier": {
+    "Type": "InputFloat2",
+    "Data": {
+      "Format": "%.3f"
+    }
+  },
+  "Entity/SpriteRenderer2D/TextureRect": {
+    "Type": "InputFloat4",
+    "Data": {
+      "Format": "%.3f"
+    }
+  },
+  "Entity/SpriteRenderer2D/Pivot": {
+    "Type": "InputFloat2",
+    "Data": {
+      "Format": "%.3f"
+    }
+  },
+  "Entity/SpriteRenderer2D/Color": {
+    "Type": "ColorPickerButton",
+    "Data": {}
+  }
+}
