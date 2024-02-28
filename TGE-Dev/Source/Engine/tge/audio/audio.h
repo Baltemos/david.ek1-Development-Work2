@@ -7,7 +7,7 @@ namespace Tga
 	public:
 		Audio();
 		~Audio();
-		void Init(const char* aPath, bool aIsLooping = false);
+		void Init(const char* aPath, bool aIsLooping = false, int aAmountOfChannels = 3);
 		void Play();
 		void SetVolume(float aVolume);
 		void SetPosition(Vector2f aPosition);

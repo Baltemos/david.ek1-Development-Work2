@@ -13,84 +13,111 @@
 #include <ShlObj_core.h>
 #include <regex>
 
+//Event<std::shared_ptr<EditorEntity>> EditorEntity::OnClickEntity;
+
+std::shared_ptr<EditorEntity> EditorEntity::CreateEditorObject()
+{
+	GameWorld* gameWorld = GameWorld::GetInstance();
+	EntityTemplate tEditorObject;
+	tEditorObject.AddComponent("Transform");
+	tEditorObject.AddComponent("SpriteRenderer2D");
+	tEditorObject.AddComponent("ClickableSprite");
+	tEditorObject.AddComponent("EditorEntity");
+	std::shared_ptr<Entity> editorObject = gameWorld->GetEntityManager().Add(tEditorObject, gameWorld->GetComponentRegistry());
+	//editorObject->GetComponent<ClickableObject>()->GetOnClick().Subscribe([](ClickableObject* ptr) { EditorEntity::OnClickEntity(ptr->GetEntity()->GetComponent<EditorEntity>()); });
+	std::shared_ptr<EditorEntity> editor = editorObject->GetComponent<EditorEntity>();
+	return editor;
+}
+
 EditorEntity::EditorEntity()
+{
+	myIsShowing = true;
+}
+
+EditorEntity::~EditorEntity()
 {
 }
 
-void EditorEntity::SetTemplate(const EntityTemplate2& aTemplate)
+void EditorEntity::SetTemplate(const EntityTemplate& aTemplate)
 {
-	myTemplate = aTemplate;
+	myEditorEntity = aTemplate;
+
+	//Event<ClickableObject*>& myOnClickEvent = GetEntity()->GetComponent<ClickableObject>()->GetOnClick();
+
+	//for (auto& child : myTemplate.GetRawChildren())
+	//{
+	//	std::shared_ptr<EditorEntity> entity = CreateEditorObject();
+	//	entity->GetEntity()->GetComponent<Transform>()->SetParent(myTransform.lock().get(), false);
+	//	entity->GetEntity()->GetComponent<ClickableObject>()->GetOnClick().Subscribe([=](ClickableObject* aClickable) { myOnClickEvent(aClickable); });
+	//	entity->SetTemplate(child);
+	//}
 
 	UpdateVisuals();
 }
 
-const EntityTemplate2& EditorEntity::GetTemplate() const
+const EntityTemplate& EditorEntity::GetTemplate() const
 {
-	return myTemplate;
+	return myEditorEntity;
 }
 
 bool EditorEntity::IsPrefabInstance() const
 {
-	return myTemplate.IsPrefabInstance();
+	return myEditorEntity.IsPrefabInstance();
 }
 
-void EditorEntity::MakePrefab()
-{
-	ImGui::OpenPopup("PrefabNameInputPopup");
-}
+//bool EditorEntity::CheckSavePrefab(const std::string& aPath)
+//{
+//	TCHAR wpath[MAX_PATH + 1];
+//	lstrcpy(wpath, string_cast<std::wstring>(aPath).c_str());
+//
+//	if (PathCleanupSpec(NULL, wpath) != NULL)
+//	{
+//		MessageBox(GetActiveWindow(), TEXT("Could not create prefab as the name has one or more illegal characters."), TEXT("Invalid Name"), MB_OK | MB_ICONERROR | MB_APPLMODAL);
+//		return false;
+//	}
+//
+//
+//	std::string resolvedPath = Tga::Settings::ResolveGameAssetPath("Entities/") + aPath;
+//
+//	if (_access_s((resolvedPath).c_str(), 0) == 0)
+//	{
+//		return MessageBox(GetActiveWindow(), TEXT("Do you want to write over it?"), TEXT("Prefab of that Name already exists"), MB_OKCANCEL | MB_ICONWARNING | MB_APPLMODAL) == IDOK;
+//	}
+//	else return true;
+//}
 
-bool EditorEntity::CheckSavePrefab(const std::string& aPath)
-{
-	TCHAR wpath[MAX_PATH + 1];
-	lstrcpy(wpath, string_cast<std::wstring>(aPath).c_str());
-
-	if (PathCleanupSpec(NULL, wpath) != NULL)
-	{
-		MessageBox(GetActiveWindow(), TEXT("Could not create prefab as the name has one or more illegal characters."), TEXT("Invalid Name"), MB_OK | MB_ICONERROR | MB_APPLMODAL);
-		return false;
-	}
-
-
-	std::string resolvedPath = Tga::Settings::ResolveGameAssetPath("Entities/") + aPath;
-
-	if (_access_s((resolvedPath).c_str(), 0) == 0)
-	{
-		return MessageBox(GetActiveWindow(), TEXT("Do you want to write over it?"), TEXT("Prefab of that Name already exists"), MB_OKCANCEL | MB_ICONWARNING | MB_APPLMODAL) == IDOK;
-	}
-	else return true;
-}
-
-void EditorEntity::OverwritePrefab()
-{
-	myTemplate.OverwritePrefab();
-}
-
-void EditorEntity::MakeIndependent()
-{
-	myTemplate = myTemplate.GetIndependent();
-}
+//void EditorEntity::OverwritePrefab()
+//{
+//	myTemplate.OverwritePrefab();
+//}
+//
+//void EditorEntity::MakeIndependent()
+//{
+//	myTemplate = myTemplate.GetIndependent();
+//}
 
 void EditorEntity::Reload()
 {
-	myTemplate.Reload();
+	myEditorEntity.Reload();
+	SetTemplate(myEditorEntity);
 	UpdateVisuals();
 }
 
 void EditorEntity::AddComponent(const std::string& aType, const nlohmann::json& aOverrides)
 {
-	assert(myTemplate.IsPrefabInstance() == false && L"Cannot add Components to a Prefab Instance");
+	assert(myEditorEntity.IsPrefabInstance() == false && L"Cannot add Components to a Prefab Instance");
 
 	ComponentTemplate tComp;
 	tComp.Type = aType;
 	tComp.Overrides = aOverrides;
-	myTemplate.TryAddComponent(tComp);
+	myEditorEntity.TryAddComponent(tComp);
 
 	UpdateVisuals();
 }
 
 bool EditorEntity::TrySetPosition(const cu::Vector3<float>& aPosition)
 {
-	for (auto& component : myTemplate.GetRawComponents())
+	for (auto& component : myEditorEntity.GetRawComponents())
 	{
 		if (component.Type == "Transform")
 		{
@@ -103,48 +130,52 @@ bool EditorEntity::TrySetPosition(const cu::Vector3<float>& aPosition)
 	return false;
 }
 
-void EditorEntity::ImGui_ShowObjectEditor(bool* aOpen)
+void EditorEntity::ImGui_ObjectEditor()
 {
-	if (ImGui::Begin("Entity Editor", aOpen))
-	{
-		// Entity Header
-		if (ImGui::Button("Delete") || ImGui::IsKeyDown(ImGuiKey_Delete))
-		{
-			GetEntity()->Destroy();
-		}
-		ImGui::SameLine();
+	//if (ImGui::Begin("Entity Editor", aOpen))
+	//{
+	//	// Entity Header
+	//	if (ImGui::Button("Delete") || ImGui::IsKeyDown(ImGuiKey_Delete))
+	//	{
+	//		GetEntity()->Destroy();
+	//	}
+	//	ImGui::SameLine();
 
-		if (IsPrefabInstance())
-		{
-			if (ImGui::Button("Make Independent"))
-			{
-				MakeIndependent();
-			}
-			ImGui::SameLine();
-			if (ImGui::Button("Update Prefab"))
-			{
-				OverwritePrefab();
-			}
-		}
-		else
-		{
-			if (ImGui::Button("Make Prefab"))
-			{
-				MakePrefab();
-			}
-		}
+	//	if (IsPrefabInstance())
+	//	{
+	//		if (ImGui::Button("Make Independent"))
+	//		{
+	//			MakeIndependent();
+	//		}
+	//		ImGui::SameLine();
+	//		if (ImGui::Button("Update Prefab"))
+	//		{
+	//			OverwritePrefab();
+	//		}
+	//	}
+	//	else
+	//	{
+	//		if (ImGui::Button("Make Prefab"))
+	//		{
+	//			MakePrefab();
+	//		}
+	//	}
 
-		std::string name = myTemplate.GetName();
+	//	ImGui::SameLine();
+	//	ImGui::Checkbox("Show", &myIsShowing);
+
+		std::string name = myEditorEntity.GetName();
 		if (ImGui::InputText("Name", &name, ImGuiInputTextFlags_EnterReturnsTrue) || ImGui::IsItemDeactivatedAfterEdit())
 		{
-			myTemplate.SetName(name);
+			myEditorEntity.SetName(name);
 		}
+
 		ImGui::Separator();
 
 		//Entity Components
 		size_t ind = 0;
 		std::vector<ComponentTemplate> components;
-		while (ind < (components = myTemplate.GetComponents()).size())
+		while (ind < (components = myEditorEntity.GetComponents()).size())
 		{
 			ImGui::PushID(static_cast<int>(ind));
 			ImGui::Separator();
@@ -153,16 +184,16 @@ void EditorEntity::ImGui_ShowObjectEditor(bool* aOpen)
 			{
 				if (ImGui::Button("Remove"))
 				{
-					myTemplate.TryEraseComponent(ind);
+					myEditorEntity.TryEraseComponent(ind);
 					ImGui::PopID();
 					continue;
 				}
 				ImGui::SameLine();
 			}
 
-			if (DisplayJson("Entity", components[ind].Type, JsonMerge(entry.DefaultData, components[ind].Defaults, true), components[ind].Overrides, entry.EditorInfo))
+			if (DisplayJson("Entity", components[ind].Type, JsonMerge(entry.DefaultData, components[ind].Defaults), components[ind].Overrides, entry.EditorInfo))
 			{
-				myTemplate.GetRawComponents()[ind].Overrides = components[ind].Overrides;
+				myEditorEntity.GetRawComponents()[ind].Overrides = components[ind].Overrides;
 				UpdateComponentVisuals(components[ind], entry);
 			}
 			ImGui::PopID();
@@ -176,13 +207,23 @@ void EditorEntity::ImGui_ShowObjectEditor(bool* aOpen)
 			ImGui::SetNextWindowPos({ static_cast<float>(mousePos.x), static_cast<float>(mousePos.y) });
 			ImGui::OpenPopup("ComponentSelectionPopup");
 		}
-	}
+	//}
 
 	//Popups
 	ImGui_ShowComponentPopup();
-	ImGui_ShowPrefabNameInputPopup();
+	//ImGui_ShowPrefabNameInputPopup();
 
-	ImGui::End();
+	//ImGui::End();
+}
+
+void EditorEntity::SetShowing(bool aShowing)
+{
+	myIsShowing = aShowing;
+}
+
+bool EditorEntity::GetShowing() const
+{
+	return myIsShowing;
 }
 
 void EditorEntity::Read(const nlohmann::json& /*someData*/)
@@ -197,7 +238,7 @@ void EditorEntity::Read(const nlohmann::json& /*someData*/)
 
 void EditorEntity::Update(float)
 {
-	SetVisible(myTemplate.ContainsComponent("SpriteRenderer2D") && myTemplate.ContainsComponent("Transform"));
+	SetVisible(myIsShowing && myEditorEntity.ContainsComponent("SpriteRenderer2D") && myEditorEntity.ContainsComponent("Transform"));
 }
 
 void EditorEntity::ImGui_ShowComponentPopup()
@@ -217,42 +258,6 @@ void EditorEntity::ImGui_ShowComponentPopup()
 	}
 }
 
-void EditorEntity::ImGui_ShowPrefabNameInputPopup()
-{
-	bool open = true;
-	if (ImGui::BeginPopupModal("PrefabNameInputPopup", &open, ImGuiWindowFlags_NoResize))
-	{
-		static const std::regex fileRx("\\w+");
-		std::string input;
-		if (ImGui::InputText("Prefab Filename", &input, ImGuiInputTextFlags_CallbackCharFilter | ImGuiInputTextFlags_EnterReturnsTrue,
-			[](ImGuiInputTextCallbackData* data) {
-				char chars[2];
-				chars[1] = '\0';
-				chars[0] = static_cast<char>(data->EventChar);
-				return static_cast<int>(std::regex_match(chars, fileRx) == false);
-			}))
-		{
-			std::string fileName = input + ".json";
-			std::string path = "Entities/" + fileName;
-
-			if (CheckSavePrefab(fileName))
-			{
-				std::string resolvedPath = Tga::Settings::ResolveGameAssetPath("") + path;
-
-				{
-					std::ofstream file(resolvedPath);
-					file << myTemplate.Save();
-				}
-
-				myTemplate = EntityTemplate2(path);
-				ImGui::CloseCurrentPopup();
-			}
-		}
-
-		ImGui::EndPopup();
-	}
-}
-
 void EditorEntity::SetVisible(bool aVisible)
 {
 	std::shared_ptr<SpriteRenderer2D> renderer = myRenderer.lock();
@@ -264,126 +269,42 @@ void EditorEntity::SetVisible(bool aVisible)
 bool EditorEntity::DisplayJson(const std::string& aValuePath, const std::string& aKey, const nlohmann::json& aDefault, nlohmann::json& aOverrides, const nlohmann::json& aEditorInfo)
 {
 	std::string path = aValuePath + "/" + aKey;
-	ImGui::PushID(path.c_str());
-	bool changed = false;
+	std::shared_ptr<ValueEditor> editor;
 
 	auto editorEntry = aEditorInfo.find(path);
 	if (editorEntry != aEditorInfo.end())
 	{
-		std::string editorType = editorEntry.value()["Type"];
-		ValueEditor* editor = myEditorRegistry->Get(editorType);
-		if (editor == nullptr)
-		{
-			ImGui::Text((aKey + ": Error ValueEditor of Type '" + editorType + "' does not exist.").c_str());
-		}
-		else
-		{
-			if (editor->OnEditValue(aKey, aDefault, aOverrides, editorEntry.value()["Data"]))
-			{
-				changed = true;
-			}
-		}
-	}
-	else if (aDefault.is_object())
-	{
-		ImGui::Text(aKey.c_str());
-		ImGui::Indent(20);
-		for (auto& entry : aDefault.items())
-		{
-			ImGui::PushID((path + "/" + entry.key() + ":Head").c_str());
-
-			if (aOverrides.contains(entry.key()))
-			{
-				if (ImGui::Button("*", { 14, 0 }))
-				{
-					aOverrides.erase(entry.key());
-					changed = true;
-				}
-				else
-				{
-					ImGui::SameLine();
-
-					if (DisplayJson(path, entry.key(), entry.value(), aOverrides[entry.key()], aEditorInfo))
-					{
-						changed = true;
-					}
-				}
-			}
-			else
-			{
-				ImGui::BeginDisabled(true);
-				ImGui::Button("", { 14, 0 });
-				ImGui::EndDisabled();
-				ImGui::SameLine();
-				nlohmann::json standIn(nlohmann::detail::value_t::null);
-				if (DisplayJson(path, entry.key(), entry.value(), standIn, aEditorInfo))
-				{
-					aOverrides[entry.key()] = standIn;
-					changed = true;
-				}
-			}
-			ImGui::PopID();
-		}
-		ImGui::Indent(-20);
-	}
-	else if (aDefault.is_array())
-	{
-		ImGui::Text(aKey.c_str());
-		ImGui::BeginGroup();
-
-		for (size_t index = 0; index < aDefault.size(); index++)
-		{
-			if (aOverrides.is_null())
-			{
-				nlohmann::json standIn = aDefault;
-				nlohmann::json prev = aOverrides;
-				if (DisplayJson(path + "[" + std::to_string(index) + "]", aKey + "[" + std::to_string(index) + "]", aDefault[index], standIn[index], aEditorInfo))
-				{
-					changed = true;
-					aOverrides = standIn;
-				}
-			}
-			else
-			{
-				if (aOverrides.size() != aDefault.size()) throw std::exception("Array override did not match size of default array.");
-				nlohmann::json prev = aOverrides;
-				if (DisplayJson(path + "[" + std::to_string(index) + "]", aKey + "[" + std::to_string(index) + "]", aDefault[index], aOverrides[index], aEditorInfo))
-				{
-					changed = true;
-				}
-			}
-		}
-		ImGui::EndGroup();
+		editor = myEditorRegistry->Get(editorEntry.value()["Type"]);
 	}
 	else
 	{
-		if (myEditorRegistry->GetDefault()->OnEditValue(aKey, aDefault, aOverrides, {}))
-		{
-			changed = true;
-		}
+		editor = myEditorRegistry->GetDefault();
 	}
 
-	ImGui::PopID();
-	return changed;
+	nlohmann::json rootValue = JsonMerge(aDefault, aOverrides);
+
+	editor->Init(aValuePath, aKey, aDefault, aEditorInfo, &rootValue, std::dynamic_pointer_cast<EditorEntity>(GetSharedPtr()));
+
+	return editor->OnEditValue(aOverrides, *myEditorRegistry);
 }
 
 void EditorEntity::UpdateVisuals()
 {
-	for (ComponentTemplate& component : myTemplate.GetComponents())
+	for (ComponentTemplate& component : myEditorEntity.GetComponents())
 	{
 		if (component.Type == "Transform")
 		{
 			const ComponentRegistry::Entry& entry = myComponentRegistry->GetEntry("Transform");
-			myTransform.lock()->Read(JsonMerge(entry.DefaultData, JsonMerge(component.Defaults, component.Overrides, true), true));
+			myTransform.lock()->Read(JsonMerge(entry.DefaultData, JsonMerge(component.Defaults, component.Overrides, true)));
 			break;
 		}
 	}
-	for (ComponentTemplate& component : myTemplate.GetComponents())
+	for (ComponentTemplate& component : myEditorEntity.GetComponents())
 	{
 		if (component.Type == "SpriteRenderer2D")
 		{
 			const ComponentRegistry::Entry& entry = myComponentRegistry->GetEntry("SpriteRenderer2D");
-			myRenderer.lock()->Read(JsonMerge(entry.DefaultData, JsonMerge(component.Defaults, component.Overrides, true), true));
+			myRenderer.lock()->Read(JsonMerge(entry.DefaultData, JsonMerge(component.Defaults, component.Overrides, true)));
 			break;
 		}
 	}
@@ -393,10 +314,10 @@ void EditorEntity::UpdateComponentVisuals(const ComponentTemplate& aComponent, c
 {
 	if (aComponent.Type == "SpriteRenderer2D")
 	{
-		myRenderer.lock()->Read(JsonMerge(aEntry.DefaultData, JsonMerge(aComponent.Defaults, aComponent.Overrides, true), true));
+		myRenderer.lock()->Read(JsonMerge(aEntry.DefaultData, JsonMerge(aComponent.Defaults, aComponent.Overrides, true)));
 	}
 	else if (aComponent.Type == "Transform")
 	{
-		myTransform.lock()->Read(JsonMerge(aEntry.DefaultData, JsonMerge(aComponent.Defaults, aComponent.Overrides, true), true));
+		myTransform.lock()->Read(JsonMerge(aEntry.DefaultData, JsonMerge(aComponent.Defaults, aComponent.Overrides, true)));
 	}
 }

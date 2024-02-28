@@ -26,6 +26,16 @@ bool Component::IsEnabled() const
     return myIsEnabled;
 }
 
+std::shared_ptr<Component> Component::GetSharedPtr()
+{
+    return mySharedPtr.lock();
+}
+
+std::shared_ptr<const Component> Component::GetSharedPtr() const
+{
+    return mySharedPtr.lock();
+}
+
 void Component::AssignEntity(std::shared_ptr<Entity> aEntity)
 {
     myEntity = aEntity;

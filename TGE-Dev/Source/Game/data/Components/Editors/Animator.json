@@ -1,0 +1,25 @@
+{
+  "Entity/Animator/States": {
+    "Type": "List",
+    "Data": {
+      "DefaultItem": {
+        "Name": "N/A",
+        "Looping": false,
+        "Animation": {
+          "SpriteSheet": "Sprites/Player character/a_carbby_idle.png",
+          "FrameSize": [ 64.0, 64.0 ],
+          "Columns": 24,
+          "FrameCount": 24,
+          "Time": 1.0
+        }
+      }
+    }
+  },
+  "Entity/Animator/States/item/Animation/SpriteSheet": {
+    "Type": "InputFilePath",
+    "Data": {
+      "DefaultDirectory": "data/Sprites",
+      "Filter": "Image Files (*.png;*.dds)|*.png;*.dds|All Files (*.*)|*.*"
+    }
+  }
+}

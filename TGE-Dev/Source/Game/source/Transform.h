@@ -2,12 +2,20 @@
 #include "Component.h"
 #include <CommonUtilities/Vector.hpp>
 #include <CommonUtilities/Matrix4x4.hpp>
+#include "Event.h"
+#include "RenderBuffer.h"
 
 namespace cu = CommonUtilities;
 
 class Transform : public Component
 {
 public:
+	enum class Space
+	{
+		eWorld = 0,
+		eUserInterface = 1
+	};
+
 	Transform();
 
 	// Inherited via Component
@@ -17,6 +25,12 @@ public:
 	void MoveLocalPosition(const cu::Vector3<float>& aVector);
 	void SetWorldPosition(const cu::Vector3<float>& aPosition);
 	void MoveWorldPosition(const cu::Vector3<float>& aVector);
+
+	//Sets the space of this transform and all its relatives, both up, down and sideways.
+	void SetSpace(Transform::Space aSpace);
+	Space GetSpace() const;
+
+	RenderBuffer* GetSpaceRenderBuffer();
 
 	cu::Vector3<float> GetLocalRight();
 	cu::Vector3<float> GetLocalUp();
@@ -36,8 +50,12 @@ public:
 
 	cu::Vector3<float> LocalToWorld(const cu::Vector3<float>& aLocal) const;
 	cu::Vector3<float> WorldToLocal(const cu::Vector3<float>& aWorld) const;
+	cu::Vector3<float> ScreenToWorld(const cu::Vector2<float>& aScreen) const;
 
-	void SetParent(Transform* aParent, bool aKeepWorldSpace);
+	void SetParent(std::shared_ptr<Transform> aParent, bool aKeepWorldSpace);
+	std::shared_ptr<Transform> GetParent() const;
+
+	std::shared_ptr<Transform> GetRoot();
 
 	cu::Matrix4x4<float> GetSummedMatrix() const;
 	cu::Matrix4x4<float> GetMatrix() const;
@@ -46,7 +64,10 @@ public:
 	cu::Matrix4x4<float> GetTranslation() const;
 	cu::Matrix4x4<float> GetRotation() const;
 
-	const std::vector<Transform*>& GetChildren() const;
+	const std::vector<std::weak_ptr<Transform>>& GetChildren() const;
+
+	Event<Transform&> OnValueChanged;
+
 protected:
 	// Inherited via Component
 	virtual void OnDestroy() override;
@@ -57,8 +78,12 @@ private:
 
 	void Recalculate();
 
-	Transform* myParent;
-	std::vector<Transform*> myChildren;
+	void PropegateSpace(Space aSpace);
+
+	std::shared_ptr<Transform> myParent;
+	std::vector<std::weak_ptr<Transform>> myChildren;
+
+	Space mySpace;
 
 	cu::Matrix4x4<float> myScale;
 	cu::Matrix4x4<float> myTranslation;

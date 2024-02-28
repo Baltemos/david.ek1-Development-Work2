@@ -1,0 +1,1 @@
+{"Children":[],"Components":[{"Data":{"Translation":[49.93011474609375,109.71728515625,0.0]},"Type":"Transform"},{"Data":{"Size":[20.0,90.0],"Texture":"Sprites\\White.png"},"Type":"SpriteRenderer2D"},{"Data":{"Bounds":{"Max":[10,45],"Min":[-9,-44]},"IsStatic":true,"IsTrigger":false},"Type":"RectangleCollider"},{"Data":{"Tag":"Door"},"Type":"Tag"}],"Name":"Door"}

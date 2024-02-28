@@ -36,7 +36,7 @@ template<typename _ComponentTy>
 inline void ComponentRegistry::RegisterD(const std::string& aName, const nlohmann::json& aDefaultData, const nlohmann::json& aEditorInfo)
 {
 	myRegistered.emplace(aName);
-	myEntries.emplace(aName, Entry{ &std::make_shared<_ComponentTy>, aDefaultData, aEditorInfo });
+	myEntries.emplace(aName, Entry{ &Component::CreateInstance<_ComponentTy>, aDefaultData, aEditorInfo });
 }
 
 template<typename _ComponentTy>

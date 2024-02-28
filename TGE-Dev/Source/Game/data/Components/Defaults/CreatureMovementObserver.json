@@ -1,3 +1,4 @@
 {
-  "MaxJumpChargeTime": 0.3
+  "MaxJumpChargeTime": 0.3,
+  "AttackCooldown": 0.48
 }

@@ -2,15 +2,25 @@
 #include <fstream>
 #include "JsonUtil.h"
 #include <tge/settings/settings.h>
+#include <sstream>
 
 void EntityPrefab::Load(const std::string& aAssetPath)
 {
+	//try
+	//{
 	myPath = aAssetPath;
 	std::string resolvedPath = Tga::Settings::ResolveGameAssetPath(aAssetPath);
 	std::ifstream file(resolvedPath);
 	nlohmann::json data;
 	file >> data;
 	myPrefab.Load(data);
+	//}
+	//catch (std::exception e)
+	//{
+	//	std::stringstream ss;
+	//	ss << "Failed to load Prefab: " + aAssetPath + ". -> " << e.what() << std::endl;
+	//	throw std::exception(ss.str().c_str());
+	//}
 }
 
 void EntityPrefab::Reload()
@@ -18,7 +28,7 @@ void EntityPrefab::Reload()
 	Load(myPath);
 }
 
-void EntityPrefab::Overwrite(const EntityTemplate2& aEntity)
+void EntityPrefab::Overwrite(const EntityTemplate& aEntity)
 {
 	std::string resolvedPath = Tga::Settings::ResolveGameAssetPath(myPath);
 	{
@@ -38,12 +48,12 @@ std::vector<ComponentTemplate>& EntityPrefab::GetRawComponents()
 	return myPrefab.GetRawComponents();
 }
 
-std::vector<EntityTemplate2> EntityPrefab::GetChildren() const
+std::vector<EntityTemplate> EntityPrefab::GetChildren() const
 {
 	return myPrefab.GetChildren();
 }
 
-const EntityTemplate2& EntityPrefab::GetTemplate() const
+const EntityTemplate& EntityPrefab::GetTemplate() const
 {
 	return myPrefab;
 }
@@ -53,24 +63,29 @@ const std::string& EntityPrefab::GetPath() const
 	return myPath;
 }
 
-EntityTemplate2::EntityTemplate2()
+bool EntityPrefab::Empty() const
+{
+	return myPath.empty();
+}
+
+EntityTemplate::EntityTemplate()
 {
 	myPrefab = nullptr;
 }
-EntityTemplate2::EntityTemplate2(const std::string& aPrefabPath)
+EntityTemplate::EntityTemplate(const std::string& aPrefabPath)
 {
 	myPrefab = new EntityPrefab();
 	myPrefab->Load(aPrefabPath);
 	InitBlankPrefabInstance();
 }
-EntityTemplate2::~EntityTemplate2()
+EntityTemplate::~EntityTemplate()
 {
 	if (myPrefab)
 	{
 		delete myPrefab;
 	}
 }
-EntityTemplate2& EntityTemplate2::operator=(const EntityTemplate2& aEntity)
+EntityTemplate& EntityTemplate::operator=(const EntityTemplate& aEntity)
 {
 	if (aEntity.myPrefab)
 	{
@@ -85,19 +100,31 @@ EntityTemplate2& EntityTemplate2::operator=(const EntityTemplate2& aEntity)
 	myName = aEntity.myName;
 	return *this;
 }
-EntityTemplate2::EntityTemplate2(const EntityTemplate2& aEntity)
+EntityTemplate::EntityTemplate(const EntityTemplate& aEntity)
 {
 	*this = aEntity;
 }
-void EntityTemplate2::SetName(const std::string& aName)
+void EntityTemplate::SetName(const std::string& aName)
 {
 	myName = aName;
 }
-const std::string& EntityTemplate2::GetName() const
+const std::string& EntityTemplate::GetName() const
 {
 	return myName;
 }
-std::vector<ComponentTemplate> EntityTemplate2::GetComponents() const
+ComponentTemplate EntityTemplate::GetComponent(std::string aType) const
+{
+	for (const ComponentTemplate& component : GetComponents())
+	{
+		if (component.Type == aType)
+		{
+			return component;
+		}
+	}
+
+	return {};
+}
+std::vector<ComponentTemplate> EntityTemplate::GetComponents() const
 {
 	std::vector<ComponentTemplate> components = myComponents;
 	if (myPrefab)
@@ -105,34 +132,46 @@ std::vector<ComponentTemplate> EntityTemplate2::GetComponents() const
 		std::vector<ComponentTemplate> prefabComponents = myPrefab->GetComponents();
 		for (size_t ind = 0; ind < components.size(); ind++)
 		{
-			components[ind].Defaults = JsonMerge(prefabComponents[ind].Defaults, prefabComponents[ind].Overrides, true);
+			components[ind].Defaults = JsonMerge(prefabComponents[ind].Defaults, prefabComponents[ind].Overrides);
 		}
 	}
 	return components;
 }
-std::vector<ComponentTemplate>& EntityTemplate2::GetRawComponents()
+std::vector<ComponentTemplate>& EntityTemplate::GetRawComponents()
 {
 	return myComponents;
 }
-std::vector<EntityTemplate2> EntityTemplate2::GetChildren() const
+std::vector<EntityTemplate> EntityTemplate::GetChildren() const
 {
-	std::vector<EntityTemplate2> children = myChildren;
+	std::vector<EntityTemplate> children = myChildren;
 	if (IsPrefabInstance())
 	{
-		std::vector<EntityTemplate2> prefabChildren = myPrefab->GetChildren();
+		std::vector<EntityTemplate> prefabChildren = myPrefab->GetChildren();
 		children.insert(children.end(), prefabChildren.begin(), prefabChildren.end());
 	}
 	return children;
 }
-std::vector<EntityTemplate2>& EntityTemplate2::GetRawChildren()
+std::vector<EntityTemplate>& EntityTemplate::GetRawChildren()
 {
 	return myChildren;
 }
-const EntityPrefab* EntityTemplate2::GetPrefab() const
+const std::vector<EntityTemplate>& EntityTemplate::GetRawChildren() const
+{
+	return myChildren;
+}
+std::vector<EntityTemplate> EntityTemplate::GetPrefabChildren() const
+{
+	if (myPrefab)
+	{
+		return myPrefab->GetChildren();
+	}
+	else return {};
+}
+const EntityPrefab* EntityTemplate::GetPrefab() const
 {
 	return myPrefab;
 }
-bool EntityTemplate2::ContainsComponent(const std::string& aType) const
+bool EntityTemplate::ContainsComponent(const std::string& aType) const
 {
 	for (auto& comp : myComponents)
 	{
@@ -143,34 +182,34 @@ bool EntityTemplate2::ContainsComponent(const std::string& aType) const
 	}
 	return false;
 }
-void EntityTemplate2::ClearOverrides()
+void EntityTemplate::ClearOverrides()
 {
 	for (auto& comp : myComponents)
 	{
-		comp.Overrides = nlohmann::json(nlohmann::detail::value_t::null);
+		comp.Overrides = nlohmann::json(nlohmann::detail::value_t::object);
 	}
 }
-bool EntityTemplate2::IsPrefabInstance() const
+bool EntityTemplate::IsPrefabInstance() const
 {
 	return myPrefab != nullptr;
 }
-EntityTemplate2 EntityTemplate2::GetIndependent() const
+EntityTemplate EntityTemplate::GetIndependent() const
 {
-	EntityTemplate2 tEntity;
-	tEntity.myChildren = myChildren;
+	EntityTemplate tEntity;
+	tEntity.myChildren = GetChildren();
 
 	std::vector<ComponentTemplate> components = GetComponents();
 	for (ComponentTemplate comp : components)
 	{
-		comp.Overrides = JsonMerge(comp.Defaults, comp.Overrides, true);
-		comp.Defaults = nlohmann::json(nlohmann::detail::value_t::null);
+		comp.Overrides = JsonMerge(comp.Defaults, comp.Overrides);
+		comp.Defaults = nlohmann::json(nlohmann::detail::value_t::object);
 		tEntity.TryAddComponent(comp);
 	}
 	return tEntity;
 }
-void EntityTemplate2::OverwritePrefab()
+void EntityTemplate::OverwritePrefab()
 {
-	EntityTemplate2 overwritten = myPrefab->GetTemplate();
+	EntityTemplate overwritten = myPrefab->GetTemplate();
 
 	for (size_t ind = 0; ind < overwritten.myComponents.size(); ind++)
 	{
@@ -180,7 +219,7 @@ void EntityTemplate2::OverwritePrefab()
 	myPrefab->Overwrite(overwritten);
 	ClearOverrides();
 }
-nlohmann::json EntityTemplate2::Save() const
+nlohmann::json EntityTemplate::Save() const
 {
 	nlohmann::json data;
 
@@ -210,7 +249,7 @@ nlohmann::json EntityTemplate2::Save() const
 
 	return data;
 }
-void EntityTemplate2::Load(const nlohmann::json& someData)
+void EntityTemplate::Load(const nlohmann::json& someData)
 {
 	if (someData.contains("PrefabPath"))
 	{
@@ -233,10 +272,21 @@ void EntityTemplate2::Load(const nlohmann::json& someData)
 
 	auto& components = someData["Components"];
 
-	if (myPrefab && components.size() != myPrefab->GetRawComponents().size())
+	if (myPrefab && components.is_null())
 	{
-		std::cout << "[Error][EntityTemplate]: Error when trying to load prefab '" << myPrefab->GetPath() << "', Component list size mismatch with instance '" << myName << "'." << std::endl;
 		InitBlankPrefabInstance();
+	}
+	else if (myPrefab && components.size() != myPrefab->GetRawComponents().size())
+	{
+		std::cout << "[Warning][EntityTemplate]: Warning when trying to load prefab '" << myPrefab->GetPath() << "', Component list size mismatch with instance '" << myName << "'." << std::endl;
+
+		nlohmann::json transform = FetchComponent("Transform", components);
+		nlohmann::json transformData = nlohmann::json(nlohmann::detail::value_t::object);
+		if (!transform.is_null())
+		{
+			transformData = transform["Data"];
+		}
+		InitBlankPrefabInstance(transformData);
 	}
 	else
 	{
@@ -246,10 +296,23 @@ void EntityTemplate2::Load(const nlohmann::json& someData)
 			ComponentTemplate comp;
 			comp.Type = compData["Type"];
 			comp.Overrides = compData["Data"];
+			//if (comp.Overrides.is_null())
+			//{
+			//	std::cout << "[Warning][" << __FILE__ << "]: Component overrides was null, this should allways be an object. Replacing with object." << std::endl;
+			//	comp.Overrides = nlohmann::json(nlohmann::detail::value_t::object);
+			//}
+
 			if (myPrefab && comp.Type != myPrefab->GetRawComponents()[componentIndex++].Type)
 			{
-				std::cout << "[Error][EntityTemplate]: Error when trying to load prefab '" << myPrefab->GetPath() << "', Component list mismatch with instance '" << myName << "'." << std::endl;
-				InitBlankPrefabInstance();
+				std::cout << "[Warning][EntityTemplate]: Warning when trying to load prefab '" << myPrefab->GetPath() << "', Component list mismatch with instance '" << myName << "'." << std::endl;
+
+				nlohmann::json transform = FetchComponent("Transform", components);
+				nlohmann::json transformData = nlohmann::json(nlohmann::detail::value_t::object);
+				if (!transform.is_null())
+				{
+					transformData = transform["Data"];
+				}
+				InitBlankPrefabInstance(transformData);
 				break;
 			}
 			myComponents.push_back(comp);
@@ -259,26 +322,26 @@ void EntityTemplate2::Load(const nlohmann::json& someData)
 	myChildren.clear();
 	for (auto& child : someData["Children"])
 	{
-		EntityTemplate2 tChild;
+		EntityTemplate tChild;
 		tChild.Load(child);
 		myChildren.push_back(tChild);
 	}
 }
-void EntityTemplate2::Reload()
+void EntityTemplate::Reload()
 {
 	if (myPrefab)
 	{
 		myPrefab->Reload();
 	}
 }
-void EntityTemplate2::AddComponent(const std::string& aType, const nlohmann::json& someOverrides)
+void EntityTemplate::AddComponent(const std::string& aType, const nlohmann::json& someOverrides)
 {
 	ComponentTemplate tComp;
 	tComp.Type = aType;
 	tComp.Overrides = someOverrides;
 	TryAddComponent(tComp);
 }
-bool EntityTemplate2::TryAddComponent(const ComponentTemplate& aComponent)
+bool EntityTemplate::TryAddComponent(const ComponentTemplate& aComponent)
 {
 	if (IsPrefabInstance())
 	{
@@ -290,7 +353,7 @@ bool EntityTemplate2::TryAddComponent(const ComponentTemplate& aComponent)
 		return true;
 	}
 }
-bool EntityTemplate2::TryEraseComponent(size_t aIndex)
+bool EntityTemplate::TryEraseComponent(size_t aIndex)
 {
 	if (IsPrefabInstance())
 	{
@@ -302,26 +365,44 @@ bool EntityTemplate2::TryEraseComponent(size_t aIndex)
 		return true;
 	}
 }
-bool EntityTemplate2::TryAddChild(const EntityTemplate2& aEntity)
+bool EntityTemplate::TryAddChild(const EntityTemplate& aEntity)
 {
-	if (IsPrefabInstance())
-	{
-		return false;
-	}
-	else
-	{
-		myChildren.push_back(aEntity);
-		return true;
-	}
+	//if (IsPrefabInstance())
+	//{
+	//	return false;
+	//}
+	//else
+	//{
+	myChildren.push_back(aEntity);
+	return true;
+	//}
 }
-void EntityTemplate2::InitBlankPrefabInstance()
+nlohmann::json EntityTemplate::FetchComponent(const std::string& aType, const nlohmann::json& aComponents)
+{
+	for (auto& comp : aComponents)
+	{
+		if (comp["Type"] == aType)
+		{
+			return comp;
+		}
+	}
+	return nlohmann::json(nlohmann::detail::value_t::null);
+}
+void EntityTemplate::InitBlankPrefabInstance(const nlohmann::json& aOptTransformOverride)
 {
 	myComponents.clear();
 	for (auto& comp : myPrefab->GetComponents())
 	{
 		ComponentTemplate tComp;
 		tComp.Type = comp.Type;
-		tComp.Overrides = {};
+		if (tComp.Type == "Transform")
+		{
+			tComp.Overrides = aOptTransformOverride;
+		}
+		else
+		{
+			tComp.Overrides = nlohmann::json(nlohmann::detail::value_t::object);
+		}
 		myComponents.push_back(tComp);
 	}
 	myName = "Instance - " + myPrefab->GetTemplate().GetName();

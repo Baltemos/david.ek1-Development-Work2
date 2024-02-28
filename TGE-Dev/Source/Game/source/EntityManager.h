@@ -10,7 +10,7 @@ public:
 	EntityManager();
 	~EntityManager();
 
-	std::shared_ptr<Entity> Add(const EntityTemplate2& aEntity, const ComponentRegistry& aRegistry);
+	std::shared_ptr<Entity> Add(const EntityTemplate& aEntity, const ComponentRegistry& aRegistry);
 	std::vector<std::shared_ptr<Entity>> LoadBatch(const std::string& aPath, const ComponentRegistry& aRegistry);
 	std::vector<std::shared_ptr<Entity>> LoadBatch(const nlohmann::json& aBatch, const ComponentRegistry& aRegistry);
 	void DestroyAll();

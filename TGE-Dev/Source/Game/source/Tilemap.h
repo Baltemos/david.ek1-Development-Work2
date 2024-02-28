@@ -23,14 +23,19 @@ public:
 
 	const std::vector<Tile>& GetTiles() const;
 
-	Tilemap() = default;
-	~Tilemap() = default;
+	Tilemap();
+	~Tilemap();
 
 protected:
 	virtual void Read(const nlohmann::json& someData) override;
 	virtual void Render(Tga::GraphicsEngine& aGraphicsEngine) override;
 private:
 	std::weak_ptr<Transform> myTransform;
+
+	Tga::RenderTarget myRenderTarget;
+	cu::Vector2<unsigned int> myRenderSize;
+
+	Tga::Sprite2DInstanceData myInstance;
 
 	std::vector<Tga::SpriteSharedData> mySharedDatas;
 	std::vector<TileSprite> myTileSprites;

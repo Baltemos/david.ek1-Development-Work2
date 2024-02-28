@@ -5,6 +5,11 @@
 #include "Entity.h"
 #include "GameWorld.h"
 
+SpriteRenderer2D::SpriteRenderer2D()
+{
+	myOrderInLayer = 0.f;
+}
+
 const Tga::Sprite2DInstanceData& SpriteRenderer2D::GetInstance() const
 {
 	return myInstance;
@@ -13,6 +18,16 @@ const Tga::Sprite2DInstanceData& SpriteRenderer2D::GetInstance() const
 void SpriteRenderer2D::SetInstance(const Tga::Sprite2DInstanceData& aInstance)
 {
 	myInstance = aInstance;
+}
+
+const Tga::SpriteSharedData& SpriteRenderer2D::GetShared() const
+{
+	return myShared;
+}
+
+void SpriteRenderer2D::SetShared(const Tga::SpriteSharedData& aShared)
+{
+	myShared = aShared;
 }
 
 void SpriteRenderer2D::Read(const nlohmann::json& someData)
@@ -55,6 +70,25 @@ void SpriteRenderer2D::Read(const nlohmann::json& someData)
 	myInstance.myColor.myA = color[3];
 
 	myOrderInLayer = someData["OrderInLayer"];
+
+	auto& flipped = someData["Flipped"];
+	myIsFlipped.x = flipped["X"];
+	myIsFlipped.y = flipped["Y"];
+}
+
+void SpriteRenderer2D::SetFlippedX(bool aFlipped)
+{
+	myIsFlipped.x = aFlipped;
+}
+
+void SpriteRenderer2D::SetFlippedY(bool aFlipped)
+{
+	myIsFlipped.y = aFlipped;
+}
+
+const cu::Vector2<bool>& SpriteRenderer2D::GetFlipped() const
+{
+	return myIsFlipped;
 }
 
 void SpriteRenderer2D::Start()
@@ -64,20 +98,32 @@ void SpriteRenderer2D::Start()
 
 void SpriteRenderer2D::Render(Tga::GraphicsEngine&)
 {
-	RenderBuffer& renderBuffer = GameWorld::GetInstance()->GetRenderBuffer();
 	std::shared_ptr<Transform> transform = myTransform.lock();
+	RenderBuffer* renderBuffer = transform->GetSpaceRenderBuffer();
 
-	Tga::Sprite2DInstanceData instance = myInstance;
-	instance.myRotation = myInstance.myRotation + transform->GetWorldEulerAngles().z;
+	if (renderBuffer)
+	{
+		Tga::Sprite2DInstanceData instance = myInstance;
+		instance.myRotation = myInstance.myRotation + transform->GetWorldEulerAngles().z;
 
-	cu::Vector3<float> position = transform->GetWorldPosition();
-	instance.myPosition = myInstance.myPosition;
-	instance.myPosition.x += position.x;
-	instance.myPosition.y += position.y;
+		cu::Vector3<float> position = transform->GetWorldPosition();
+		instance.myPosition = myInstance.myPosition;
+		instance.myPosition.x += position.x;
+		instance.myPosition.y += position.y;
 
-	cu::Matrix4x4<float> scale = transform->GetScale();
-	instance.mySizeMultiplier.x *= scale(1, 1);
-	instance.mySizeMultiplier.y *= scale(2, 2);
+		cu::Matrix4x4<float> scale = transform->GetScale();
+		instance.mySizeMultiplier.x *= scale(1, 1);
+		instance.mySizeMultiplier.y *= scale(2, 2);
 
-	renderBuffer.Push(myShared, instance, myOrderInLayer);
+		if (myIsFlipped.x)
+		{
+			instance.mySizeMultiplier.x = -instance.mySizeMultiplier.x;
+		}
+		if (myIsFlipped.y)
+		{
+			instance.mySizeMultiplier.y = -instance.mySizeMultiplier.y;
+		}
+
+		renderBuffer->Push(myShared, instance, myOrderInLayer);
+	}
 }

@@ -14,7 +14,7 @@ public:
 	template<typename _Ret>
 	using StaticFunction = _Ret(*)(_Args...);
 
-	Event() = default;
+	Event();
 	~Event() = default;
 
 	template<class _Ty, typename _Ret>
@@ -23,6 +23,7 @@ public:
 	EventKey Subscribe(std::function<_Ret(_Args...)> aFunction);
 	EventKey Subscribe(std::function<void(_Args...)> aFunction) { return Subscribe<void>(aFunction); };
 	void Unsubscribe(EventKey anEventKey);
+	void UnsubscribeAll();
 
 	void operator()(_Args... someParameters) const;
 
@@ -47,15 +48,27 @@ inline EventKey Event<_Args...>::Subscribe(std::function<_Ret(_Args...)> aFuncti
 {
 	EventKey key = myKeyCount++;
 	//Callback callback = aFunction;
-	Callback callback = [](_Args&... someArgs) { (aFunction)(someArgs...); };
+	Callback callback = [aFunction](_Args&... someArgs) { (aFunction)(someArgs...); };
 	myCallbacks.emplace(key, callback);
 	return key;
+}
+
+template<typename ..._Args>
+inline Event<_Args...>::Event()
+{
+	myKeyCount = 0;
 }
 
 template<typename ..._Args>
 inline void Event<_Args...>::Unsubscribe(EventKey anEventKey)
 {
 	myCallbacks.erase(anEventKey);
+}
+
+template<typename ..._Args>
+inline void Event<_Args...>::UnsubscribeAll()
+{
+	myCallbacks.clear();
 }
 
 template<typename ..._Args>

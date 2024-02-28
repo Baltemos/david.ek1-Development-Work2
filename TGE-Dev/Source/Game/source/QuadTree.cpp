@@ -1,5 +1,4 @@
 #include "QuadTree.h"
-#include "Collision.h"
 #include "Collider2D.h"
 #include <CommonUtilities/Intersection.hpp>
 

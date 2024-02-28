@@ -3,6 +3,7 @@
 Entity::Entity()
 {
 	myIsDestroyed = false;
+	myIsIndestructible = false;
 }
 
 void Entity::AddComponent(std::shared_ptr<Component> aComponent)
@@ -12,7 +13,7 @@ void Entity::AddComponent(std::shared_ptr<Component> aComponent)
 
 void Entity::Destroy()
 {
-	if (!myIsDestroyed)
+	if (IsIndestructible() == false && !myIsDestroyed)
 	{
 		myIsDestroyed = true;
 		OnDestroy();
@@ -60,4 +61,14 @@ void Entity::OnDestroy()
 	{
 		compPtr->OnDestroy();
 	}
+}
+
+void Entity::SetIndestructible(bool aIndestructible)
+{
+	myIsIndestructible = aIndestructible;
+}
+
+bool Entity::IsIndestructible() const
+{
+	return myIsIndestructible;
 }

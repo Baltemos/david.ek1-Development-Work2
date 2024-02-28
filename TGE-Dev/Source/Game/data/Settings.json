@@ -1,4 +1,4 @@
 {
   "RenderSize": [ 568, 320 ],
-  "StartingScene":  "Scenes/Level1.json"
+  "StartingScene":  "Scenes/MainMenu.json"
 }

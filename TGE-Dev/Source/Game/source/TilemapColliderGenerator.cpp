@@ -4,6 +4,7 @@
 #include "EntityTemplate.h"
 #include "GameWorld.h"
 #include "RectangleCollider.h"
+#include "Tag.h"
 
 void TilemapColliderGenerator::Start()
 {
@@ -84,9 +85,16 @@ void TilemapColliderGenerator::Start()
 		}
 	}
 
-	EntityTemplate2 tileCollider;
+	EntityTemplate tileCollider;
 	tileCollider.AddComponent("Transform");
 	tileCollider.AddComponent("RectangleCollider");
+
+	std::vector<std::shared_ptr<Tag>> tags = GetEntity()->GetComponents<Tag>();
+
+	for (std::shared_ptr<Tag> tag : tags)
+	{
+		tileCollider.AddComponent("Tag", { { "Tag", tag->GetTag() } });
+	}
 
 	for (const std::vector<cu::AABB2D<int>>& candidateCollection : candidates)
 	{
@@ -96,7 +104,7 @@ void TilemapColliderGenerator::Start()
 			std::shared_ptr<RectangleCollider> collider = entity->GetComponent<RectangleCollider>();
 			std::shared_ptr<Transform> otherTransform = entity->GetComponent<Transform>();
 
-			otherTransform->SetParent(transform.get(), false);
+			otherTransform->SetParent(transform, false);
 			collider->SetBounds(cu::AABB2D<float>({ static_cast<float>(bounds.Min.x) * 32.f, static_cast<float>(bounds.Min.y) * 32.f }, { static_cast<float>(bounds.Max.x) * 32.f, static_cast<float>(bounds.Max.y) * 32.f }));
 			collider->SetStatic(true);
 		}

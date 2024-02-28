@@ -38,7 +38,7 @@ public:
 	bool    Play(Handle aHandle, Handle& outChannel, float aVolume);
 	bool	Stop(Handle hndl, bool immediately);
 	bool    Stop(const FileName&, bool immediately = true);
-	long	Load(const FileName&, bool);
+	long	Load(const FileName&, bool, int aAmountOfChannels = 3);
 	VStrings  NowPlaying(bool only_repeated) const;
 
 	void    SetVolume(const Handle& hndl, float aVolume);

@@ -152,6 +152,7 @@ LRESULT CALLBACK WindowsWindow::WindowProc(HWND hWnd, UINT message, WPARAM wPara
 		
 
 	}
+	if (wParam == SC_KEYMENU && (lParam >> 16) <= 0) return 0;
 	return DefWindowProc (hWnd, message, wParam, lParam);
 }
 

@@ -8,26 +8,26 @@ void EditorUnityManager::LoadBatch(const nlohmann::json& aBatch)
 	std::shared_ptr<Transform> rootTransform = myUnityRoot->GetComponent<Transform>();
 	for (auto& entity : aBatch)
 	{
-		EntityTemplate2 tEntity;
+		EntityTemplate tEntity;
 		tEntity.Load(entity);
 
-		manager.Add(tEntity, registry)->GetComponent<Transform>()->SetParent(rootTransform.get(), true);
+		manager.Add(tEntity, registry)->GetComponent<Transform>()->SetParent(rootTransform, true);
 	}
 }
 
 void EditorUnityManager::Clear()
 {
 	std::shared_ptr<Transform> rootTransform = myUnityRoot->GetComponent<Transform>();
-	std::vector<Transform*> children = rootTransform->GetChildren();
-	for (auto child : children)
+	const std::vector<std::weak_ptr<Transform>>& children = rootTransform->GetChildren();
+	for (auto& child : children)
 	{
-		child->GetEntity()->Destroy();
+		child.lock()->GetEntity()->Destroy();
 	}
 }
 
 void EditorUnityManager::Read(const nlohmann::json&)
 {
-	EntityTemplate2 tUnityRoot;
+	EntityTemplate tUnityRoot;
 	tUnityRoot.AddComponent("Transform");
 
 	myUnityRoot = GameWorld::GetInstance()->GetEntityManager().Add(tUnityRoot, GameWorld::GetInstance()->GetComponentRegistry());

@@ -7,7 +7,7 @@ class Camera : public Component
 {
 public:
 	Camera();
-	~Camera() = default;
+	~Camera();
 
 	static std::multiset<Camera*> GetCameras();
 	static Camera* GetActiveCamera();

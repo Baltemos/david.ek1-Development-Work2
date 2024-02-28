@@ -1,6 +1,0 @@
-{
- 	"MovementSpeed": 400.0,
- 	"MaxJumpChargeTime": 0.5,
-	"DashSpeed": 400,
-	"DashCooldown": 1.5
-}

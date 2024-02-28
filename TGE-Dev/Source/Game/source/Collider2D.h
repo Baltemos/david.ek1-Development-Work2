@@ -21,8 +21,8 @@ struct CollisionInfo2D
 {
 	bool Intersects;
 	cu::Vector2<float> Normal;
-	Collider* OurCollider;
-	Collider* OtherCollider;
+	std::shared_ptr<Collider> OurCollider;
+	std::shared_ptr<Collider> OtherCollider;
 };
 
 class Collider : public Component
@@ -36,7 +36,7 @@ public:
 	bool IsStatic() const;
 	bool IsTrigger() const;
 
-	virtual CollisionInfo2D Intersects(Collider* aCollider);
+	virtual CollisionInfo2D Intersects(std::shared_ptr<Collider> aCollider);
 	virtual void UpdateBounds() = 0;
 	ColliderType GetType() const;
 	cu::Circle<float> GetBoundingCircle() const;
@@ -50,8 +50,8 @@ protected:
 
 	void SetBoundingCircle(cu::Circle<float> aBoundingCircle);
 private:
-	bool PreliminaryCheck(Collider* aCollider) const;
-	static void CheckCollision(Collider* aCollider1, Collider* aCollide2);
+	bool PreliminaryCheck(std::shared_ptr<Collider> aCollider) const;
+	static void CheckCollision(std::shared_ptr<Collider> aCollider1, std::shared_ptr<Collider> aCollide2);
 
 	ColliderType myType;
 

@@ -2,9 +2,9 @@
 #include "JsonUtil.h"
 #include <imgui/imgui.h>
 
-bool EditorColorPickerButton::OnEditValue(const std::string& aKey, const nlohmann::json& aDefault, nlohmann::json& aOverride, const nlohmann::json&)
+bool EditorColorPickerButton::OnEditValue(nlohmann::json& aOverride, EditorRegistry&)
 {
-    nlohmann::json current = JsonMerge(aDefault, aOverride, true);
+    nlohmann::json current = GetValue(GetDefaultValue(), aOverride);
 
     float value[4];
     for (size_t index = 0; index < 4; index++)
@@ -12,7 +12,7 @@ bool EditorColorPickerButton::OnEditValue(const std::string& aKey, const nlohman
         value[index] = current[index];
     }
 
-    if (ImGui::ColorEdit4(aKey.c_str(), value))
+    if (ImGui::ColorEdit4(GetKey().c_str(), value))
     {
         for (size_t index = 0; index < 4; index++)
         {

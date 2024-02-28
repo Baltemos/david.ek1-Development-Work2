@@ -2,9 +2,9 @@
 #include <imgui/imgui.h>
 #include "JsonUtil.h"
 
-bool EditorDragFloat3::OnEditValue(const std::string& aKey, const nlohmann::json& aDefault, nlohmann::json& aOverride, const nlohmann::json& aEditorData)
+bool EditorDragFloat3::OnEditValue(nlohmann::json& aOverride, EditorRegistry&)
 {
-	nlohmann::json result = JsonMerge(aDefault, aOverride, true);
+	nlohmann::json result = GetValue(GetDefaultValue(), aOverride);
 	float values[3];
 	values[0] = result[0];
 	values[1] = result[1];
@@ -13,18 +13,18 @@ bool EditorDragFloat3::OnEditValue(const std::string& aKey, const nlohmann::json
 	float minValue = 0;
 	float maxValue = 0;
 
-	auto minEntry = aEditorData.find("Min");
-	if (minEntry != aEditorData.end())
+	auto minEntry = GetData().find("Min");
+	if (minEntry != GetData().end())
 	{
 		minValue = minEntry.value();
 	}
-	auto maxEntry = aEditorData.find("Max");
-	if (maxEntry != aEditorData.end())
+	auto maxEntry = GetData().find("Max");
+	if (maxEntry != GetData().end())
 	{
 		maxValue = maxEntry.value();
 	}
 
-	if (ImGui::DragFloat3(aKey.c_str(), values, aEditorData["Speed"], minValue, maxValue, aEditorData["Format"].get<std::string>().c_str()))
+	if (ImGui::DragFloat3(GetKey().c_str(), values, GetData()["Speed"], minValue, maxValue, GetData()["Format"].get<std::string>().c_str()))
 	{
 		aOverride[0] = values[0];
 		aOverride[1] = values[1];

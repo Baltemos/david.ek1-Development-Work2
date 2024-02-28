@@ -1,0 +1,14 @@
+{
+  "Audio": [
+    {
+      "FilePath": "Sounds/Music/music.ogg",
+      "ShouldLoop": true,
+      "AmountOfChannels": 1
+    },
+    {
+      "FilePath": "Sounds/SFX/time.mp3",
+      "ShouldLoop": false,
+      "AmountOfChannels": 3
+    }
+  ]
+}

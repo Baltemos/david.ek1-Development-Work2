@@ -2,6 +2,7 @@
 #include "Component.h"
 #include "CommonUtilities/Vector.hpp"
 #include "Collider2D.h"
+#include <tge/graphics/GraphicsEngine.h>
 
 class Wind : public Component
 {

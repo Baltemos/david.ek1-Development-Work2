@@ -11,6 +11,8 @@
 EditorManager::EditorManager()
 {
 	myIsPlaying = false;
+	myScene.EditorBatch = nlohmann::json(nlohmann::detail::value_t::array);
+	myScene.UnityBatch = nlohmann::json(nlohmann::detail::value_t::array);
 }
 
 bool EditorManager::OpenScene()
@@ -37,13 +39,15 @@ bool EditorManager::OpenUnity()
 		nlohmann::json data;
 		file >> data;
 		myScene.UnityBatch = data["scene_objects"];
+		auto& prefabs = data["entity_prefabs"];
+		myScene.EditorBatch.insert(myScene.EditorBatch.end(), prefabs.begin(), prefabs.end());
 	}
 	return result.Succeeded;
 }
 
 void EditorManager::LoadScene()
 {
-	ClearEditor();
+	ClearScene();
 	myEditorEntityManager.lock()->LoadBatch(myScene.EditorBatch);
 	myEditorUnityManager.lock()->LoadBatch(myScene.UnityBatch);
 }
@@ -92,7 +96,7 @@ void EditorManager::Play()
 		myEditorCamera->SetActive(false);
 	}
 
-	ClearEditor();
+	ClearScene();
 
 	EntityManager& manager = GameWorld::GetInstance()->GetEntityManager();
 
@@ -102,7 +106,6 @@ void EditorManager::Play()
 
 void EditorManager::StopPlay()
 {
-	ClearEditor();
 	LoadScene();
 
 	const std::multiset<Camera*>& cameras = Camera::GetCameras();
@@ -116,7 +119,7 @@ void EditorManager::StopPlay()
 	myEditorEntityManager.lock()->SetEnabled(true);
 }
 
-void EditorManager::ClearEditor()
+void EditorManager::ClearScene()
 {
 	for (std::shared_ptr<Entity> entity : myCaughtEntities)
 	{
@@ -127,8 +130,22 @@ void EditorManager::ClearEditor()
 	myEditorUnityManager.lock()->Clear();
 }
 
+void EditorManager::ClearEditor()
+{
+	ClearScene();
+
+	myScene.DefaultSaveFile = std::string();
+	myScene.EditorBatch = nlohmann::json(nlohmann::detail::value_t::array);
+	myScene.UnityBatch = nlohmann::json(nlohmann::detail::value_t::array);
+}
+
 void EditorManager::Read(const nlohmann::json&)
 {
+	if (IsDestroyed() == false)
+	{
+		GetEntity()->SetIndestructible(true);
+	}
+
 	myEditorEntityManager = GetEntity()->GetComponent<EditorEntityManager>();
 	myEditorUnityManager = GetEntity()->GetComponent<EditorUnityManager>();
 
@@ -185,7 +202,7 @@ void EditorManager::Update(float)
 
 void EditorManager::OnDestroy()
 {
-	ClearEditor();
+	ClearScene();
 	GameWorld::GetInstance()->GetEntityManager().GetOnAddEntity().Unsubscribe(myOnAddEntityKey);
 }
 
@@ -209,7 +226,6 @@ void EditorManager::ShowBatchExplorer(bool* aOpen)
 	if (ImGui::Button("Clear"))
 	{
 		ClearEditor();
-		myScene.DefaultSaveFile = std::string();
 	}
 	ImGui::End();
 }

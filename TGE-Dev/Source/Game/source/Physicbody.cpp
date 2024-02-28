@@ -32,7 +32,7 @@ void Physicbody::SetIsDashing(bool aDashing)
 	if (myDashing)
 	{
 		//HACK
-		myDashDuration = .5f;
+		myDashDuration = .8f;
 	}
 }
 
@@ -65,12 +65,6 @@ void Physicbody::Update(float aDeltaTime)
 	if (!myDashing)
 	{
 		myVelocity += myGravity * aDeltaTime;
-
-		cu::Vector2<float> dragDelta = myDrag * aDeltaTime * aDeltaTime;
-		dragDelta.x = (std::min)(dragDelta.x, 1.0f);
-		dragDelta.y = (std::min)(dragDelta.y, 1.0f);
-
-		myVelocity -= myVelocity * dragDelta;
 	}
 	else
 	{
@@ -82,7 +76,15 @@ void Physicbody::Update(float aDeltaTime)
 		}
 	}
 
+	cu::Vector2<float> dragForce = myDrag * myVelocity * myVelocity * 0.5f * aDeltaTime;
+	dragForce.x = (std::min)(dragForce.x, std::abs(myVelocity.x));
+	dragForce.y = (std::min)(dragForce.y, std::abs(myVelocity.y));
+	cu::Vector2<float> sign(1.f - 2.f * static_cast<float>(myVelocity.x < 0), 1.f - 2.f * static_cast<float>(myVelocity.y < 0));
+	dragForce *= sign;
+
 	myTransform.lock()->MoveLocalPosition(cu::Vector3<float>(myVelocity * aDeltaTime, 0));
+
+	myVelocity -= dragForce;
 }
 
 void Physicbody::onCollision(const CollisionInfo2D& aInfo)

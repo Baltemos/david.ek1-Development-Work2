@@ -12,14 +12,18 @@
 #include "PlayerMovementObserver.h"
 #include "Camera.h"
 #include "Paralax.h"
-#include "ClickableObject.h"
+#include "ClickableSprite.h"
 #include "EditorEntity.h"
+#include "EditorDragFloat.h"
+#include "EditorDragFloat2.h"
 #include "EditorDragFloat3.h"
 #include "EditorColorPicker.h"
-#include "EditorInputFloat2.h"
+#include "EditorList.h"
 #include "EditorManager.h"
 #include "Physicbody.h"
-#include "Collision.h"
+#include "Collider2D.h"
+#include "CircleCollider.h"
+#include "RectangleCollider.h"
 #include <tge/graphics/GraphicsStateStack.h>
 #include <tge/graphics/DX11.h>
 #include "FreeCamera.h"
@@ -31,8 +35,18 @@
 #include "Tilemap.h"
 #include "Wind.h"
 #include "EditorEntityManager.h"
+#include "EditorInputFloat2.h"
 #include "EditorInputFloat3.h"
 #include "TilemapColliderGenerator.h"
+#include "Animator.h"
+#include "EditorEnum.h"
+#include "EditorOptional.h"
+#include "UIManager.h"
+#include "UIElement.h"
+#include "SceneLoaderButton.h"
+#include "ScenePickerButton.h"
+#include "EditorRectBounds.h"
+#include "EditorCircleBounds.h"
 
 #define RegisterComponent(Component) myComponentRegistry.Register<Component>(#Component, "Components/Defaults/" + std::string(#Component) + ".json", "Components/Editors/" + std::string(#Component) + ".json");
 
@@ -87,14 +101,19 @@ EditorRegistry& GameWorld::GetEditorRegistry()
 	return myEditorRegistry;
 }
 
-SpriteManager& GameWorld::GetSpriteManager()
-{
-	return mySpriteManager;
-}
-
 RenderBuffer& GameWorld::GetRenderBuffer()
 {
 	return myRenderBuffer;
+}
+
+RenderBuffer& GameWorld::GetUIRenderBuffer()
+{
+	return myUIRenderBuffer;
+}
+
+AudioManager& GameWorld::GetAudioManager()
+{
+	return myAudioManager;
 }
 
 cu::Vector2<float> GameWorld::GetViewportSize() const
@@ -138,9 +157,6 @@ void GameWorld::Init()
 	myGameViewRenderTarget = Tga::RenderTarget::Create(Tga::DX11::GetResolution());
 #endif // !_RETAIL
 
-
-	mySpriteManager.Load("Sprites.json");
-
 	RegisterComponent(Transform);
 	RegisterComponent(SpriteRenderer2D);
 	RegisterComponent(CreatureInput);
@@ -153,6 +169,7 @@ void GameWorld::Init()
 	RegisterComponent(RangedCrab);
 	RegisterComponent(Health);
 	RegisterComponent(ExpirationTimer);
+	RegisterComponent(Projectile);
 	RegisterComponent(Camera);
 	RegisterComponent(Physicbody);
 	RegisterComponent(CircleCollider);
@@ -162,8 +179,15 @@ void GameWorld::Init()
 	RegisterComponent(Tag);
 	RegisterComponent(Tilemap);
 	RegisterComponent(TilemapColliderGenerator);
-	RegisterComponent(ClickableObject);
+	RegisterComponent(ClickableSprite);
 	RegisterComponent(Wind);
+	RegisterComponent(Animator);
+
+	// UI
+	RegisterComponent(UIManager);
+	RegisterComponent(UIElement);
+	RegisterComponent(SceneLoaderButton);
+	RegisterComponent(ScenePickerButton);
 
 #ifndef _RETAIL
 
@@ -172,6 +196,8 @@ void GameWorld::Init()
 	RegisterComponent(EditorEntityManager);
 	RegisterComponent(EditorUnityManager);
 
+	myEditorRegistry.Register<EditorDragFloat>("DragFloat");
+	myEditorRegistry.Register<EditorDragFloat2>("DragFloat2");
 	myEditorRegistry.Register<EditorDragFloat3>("DragFloat3");
 	myEditorRegistry.Register<EditorColorPicker>("ColorPicker");
 	myEditorRegistry.Register<EditorInputFloat2>("InputFloat2");
@@ -179,8 +205,14 @@ void GameWorld::Init()
 	myEditorRegistry.Register<EditorColorPickerButton>("ColorPickerButton");
 	myEditorRegistry.Register<EditorInputFilePath>("InputFilePath");
 	myEditorRegistry.Register<EditorInputFloat3>("InputFloat3");
+	myEditorRegistry.Register<EditorList>("List");
+	myEditorRegistry.Register<EditorEnum>("Enum");
+	myEditorRegistry.Register<EditorOptional>("Optional");
+	myEditorRegistry.Register<EditorRectBounds>("RectBounds");
+	myEditorRegistry.Register<EditorCircleBounds>("CircleBounds");
 #endif // !_RETAIL
 
+	myAudioManager.Init();
 	//TODO add proper level bounds
 	//cu::Vector2<float> minBound = { -5000.f, -5000.f };
 	//cu::Vector2<float> maxBound = { 5000.f, 5000.f };
@@ -230,7 +262,7 @@ void GameWorld::Init()
 	//tCamera.AddComponent("FreeCamera");
 	//myEntityManager.Add(tCamera, myComponentRegistry);
 
-	EntityTemplate2 tEditorManager;
+	EntityTemplate tEditorManager;
 	tEditorManager.AddComponent("Transform");
 	tEditorManager.AddComponent("EditorManager");
 	tEditorManager.AddComponent("EditorEntityManager");
@@ -249,15 +281,8 @@ void GameWorld::Init()
 
 void GameWorld::Update(float aTimeDelta)
 {
-	UNREFERENCED_PARAMETER(aTimeDelta);
-
 	myEntityManager.AddPending();
 	myEntityManager.Update(aTimeDelta);
-
-	//OLD
-	//CheckCollision();
-
-	//NEW
 	Collider::RunCollisions();
 
 	myEntityManager.RemoveDestroyed();
@@ -271,7 +296,8 @@ void GameWorld::Render()
 	stateStack.Push();
 	stateStack.SetSamplerState(Tga::SamplerFilter::Point, Tga::SamplerAddressMode::Wrap);
 	Tga::Camera camera;
-	camera.SetOrtographicProjection(0, static_cast<float>(myGameRenderTarget.CalculateTextureSize().x), 0, static_cast<float>(myGameRenderTarget.CalculateTextureSize().y), -1, 1);
+	cu::Vector2<float> renderTargetSize = { static_cast<float>(GetResolution().x), static_cast<float>(GetResolution().y) };
+	camera.SetOrtographicProjection(0, renderTargetSize.x, 0, renderTargetSize.y, -1, 1);
 	stateStack.SetCamera(camera);
 
 	myGameRenderTarget.SetAsActiveTarget();
@@ -281,8 +307,9 @@ void GameWorld::Render()
 	Camera* activeCamera = Camera::GetActiveCamera();
 	if (activeCamera)
 	{
+		cu::Matrix4x4<float> matrix = activeCamera->GetMatrix();
 		myEntityManager.Render(engine->GetGraphicsEngine());
-		myRenderBuffer.Render(activeCamera->GetMatrix());
+		myRenderBuffer.Render(matrix);
 		myRenderBuffer.Clear();
 	}
 	else
@@ -290,13 +317,24 @@ void GameWorld::Render()
 		std::cout << "[GameWorld]: Skipping render, No Active Camera." << std::endl;
 	}
 
+	// UI Rendering
+	stateStack.Push();
+
+	Tga::Camera uiCamera;
+	uiCamera.SetOrtographicProjection(0, renderTargetSize.x, 0, renderTargetSize.y, -1, 1);
+	stateStack.SetCamera(uiCamera);
+
+	myUIRenderBuffer.Render(cu::Matrix4x4<float>());
+	myUIRenderBuffer.Clear();
+
+	stateStack.Pop();
 
 #ifndef _RETAIL
 	Tga::RenderTarget* renderTarget = &myGameViewRenderTarget;
-	Tga::Vector2ui renderTargetSize = Tga::DX11::GetResolution();
+	Tga::Vector2ui backbufferSize = Tga::DX11::GetResolution();
 #else
 	Tga::RenderTarget* renderTarget = Tga::DX11::BackBuffer;
-	Tga::Vector2ui renderTargetSize = Tga::DX11::GetResolution();
+	Tga::Vector2ui backbufferSize = Tga::DX11::GetResolution();
 #endif
 
 	stateStack.Pop();
@@ -309,7 +347,7 @@ void GameWorld::Render()
 	shared.myTexture = &myGameRenderTarget;
 
 	Tga::Sprite2DInstanceData instance;
-	instance.mySize = renderTargetSize;
+	instance.mySize = backbufferSize;
 	instance.myPivot = { 0.f, 1.f };
 
 	engine->GetGraphicsEngine().GetSpriteDrawer().Draw(shared, instance);
@@ -340,6 +378,21 @@ void GameWorld::Render()
 
 	Tga::DX11::BackBuffer->SetAsActiveTarget();
 #endif
+}
+
+void GameWorld::LoadScene(const std::string& aSceneName)
+{
+	LoadSceneAbsolute(Tga::Settings::ResolveGameAssetPath(aSceneName));
+}
+
+void GameWorld::LoadSceneAbsolute(const std::string& aScenePath)
+{
+	myEntityManager.DestroyAll();
+	nlohmann::json scene;
+	std::ifstream sceneFile(aScenePath);
+	sceneFile >> scene;
+	myEntityManager.LoadBatch(scene["UnityBatch"], myComponentRegistry);
+	myEntityManager.LoadBatch(scene["Batch"], myComponentRegistry);
 }
 
 void GameWorld::ReadFromFile(/*const Tga::Engine& anEngine*/) //Note: Engine should be included, but warning level 4 will prevent it from remaining unused

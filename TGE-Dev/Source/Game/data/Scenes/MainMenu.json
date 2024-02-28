@@ -1,0 +1,1 @@
+{"Batch":[{"Children":[],"Components":[{"Data":null,"Type":"Transform"},{"Data":null,"Type":"Camera"}],"Name":"Camera"},{"Children":[],"Components":[{"Data":{},"Type":"Transform"},{"Data":{},"Type":"SpriteRenderer2D"},{"Data":{},"Type":"UIManager"}],"Name":"Instance - Main Menu","PrefabPath":"Entities/Main_Menu.json"}],"UnityBatch":[]}

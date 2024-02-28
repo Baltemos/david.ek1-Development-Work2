@@ -22,10 +22,14 @@ public:
 	void Render(Tga::GraphicsEngine& aGraphicsEngine);
 	void OnDestroy();
 
+	void SetIndestructible(bool aIndestructible);
+	bool IsIndestructible() const;
+
 private:
 	void AddComponent(std::shared_ptr<Component> aComponent);
 
 	bool myIsDestroyed;
+	bool myIsIndestructible;
 	std::vector<std::shared_ptr<Component>> myComponents;
 };
 

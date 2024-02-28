@@ -6,16 +6,16 @@
 #include <tge/util/StringCast.h>
 #include <tge/settings/settings.h>
 
-bool EditorInputFilePath::OnEditValue(const std::string& aKey, const nlohmann::json& aDefault, nlohmann::json& aOverride, const nlohmann::json& aEditorData)
+bool EditorInputFilePath::OnEditValue(nlohmann::json& aOverride, EditorRegistry&)
 {
-	nlohmann::json value = JsonMerge(aDefault, aOverride, true);
+	nlohmann::json value = GetValue(GetDefaultValue(), aOverride);
 
 	char buffer[_MAX_PATH];
 	strncpy_s(buffer, value.get<std::string>().c_str(), sizeof(buffer));
 
 	if (ImGui::Button("Open"))
 	{
-		std::wstring filter = string_cast<std::wstring>(aEditorData["Filter"].get<std::string>());
+		std::wstring filter = string_cast<std::wstring>(GetData()["Filter"].get<std::string>());
 		size_t filterSize = filter.size() + 2;
 		wchar_t* filterBuffer = new wchar_t[filterSize];
 		ZeroMemory(filterBuffer, filterSize * sizeof(wchar_t));
@@ -33,7 +33,7 @@ bool EditorInputFilePath::OnEditValue(const std::string& aKey, const nlohmann::j
 		}
 
 
-		FileDialogResult result = OpenFileDialog(std::filesystem::path(aEditorData["DefaultDirectory"].get<std::string>()), L"", filterBuffer);
+		FileDialogResult result = OpenFileDialog(std::filesystem::path(GetData()["DefaultDirectory"].get<std::string>()), L"", filterBuffer);
 		if (result.Succeeded)
 		{
 			std::filesystem::path dataPath("../Source/Game/data/");
@@ -50,7 +50,7 @@ bool EditorInputFilePath::OnEditValue(const std::string& aKey, const nlohmann::j
 	}
 
 	ImGui::SameLine();
-	if (ImGui::InputText(aKey.c_str(), buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue) || ImGui::IsItemDeactivatedAfterEdit())
+	if (ImGui::InputText(GetKey().c_str(), buffer, sizeof(buffer), ImGuiInputTextFlags_EnterReturnsTrue) || ImGui::IsItemDeactivatedAfterEdit())
 	{
 		aOverride = std::string(buffer);
 		return true;

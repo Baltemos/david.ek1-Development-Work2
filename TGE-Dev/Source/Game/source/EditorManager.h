@@ -35,6 +35,7 @@ public:
 
 	void Play();
 	void StopPlay();
+	void ClearScene();
 	void ClearEditor();
 
 protected:

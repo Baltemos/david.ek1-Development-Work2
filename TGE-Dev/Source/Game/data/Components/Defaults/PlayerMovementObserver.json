@@ -1,5 +1,6 @@
 {
- 	"MaxJumpChargeTime": 0.2,
-	"DashSpeed": 100,
-	"DashCooldown": 1.5
+  "MaxJumpChargeTime": 0.2,
+  "AttackCooldown": 0.48,
+  "DashSpeed": 100,
+  "DashCooldown": 1.5
 }

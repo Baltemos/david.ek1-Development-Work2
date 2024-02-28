@@ -40,23 +40,27 @@ void CircleCollider::Update(float)
 	UpdateBounds();
 
 #ifdef _DEBUG
-	constexpr int repetitions = 8;
-	constexpr float increment = 3.142f * 0.5f / static_cast<float>(repetitions);
+	static constexpr const size_t pointCount = 16;
+	static constexpr const float TwoPi = 6.28318530718f;
+	static constexpr float angleDelta = TwoPi / static_cast<float>(pointCount);
 
-	Tga::Sprite2DInstanceData instance;
-	instance.myPosition = Tga::Vector2f(GetWorldBounds().GetCenter());
-	instance.myPivot = { 0.5, 0.5 };
-	instance.myColor = { 1, 0, 0, 0.5f };
+	Tga::Vector4f color = { 1.f, 0.f, 0.f, 1.f };
 
-	float diameter = 2.f * GetWorldBounds().GetRadius();
-	for (int ind = 0; ind < repetitions; ind++)
+	float radius = GetWorldBounds().GetRadius();
+	cu::Vector3<float> center = cu::Vector3<float>(GetWorldBounds().GetCenter(), 0);
+	Tga::Vector3f lastPos = Tga::Vector3f(cu::Vector3<float>(radius, 0.f, 0.f) + center);
+
+	float angle = 0.f;
+	for (size_t ind = 0; ind < pointCount; ind++)
 	{
-		float v = static_cast<float>(ind) * increment;
-		float x = std::cos(v);
-		float y = std::sin(v);
+		angle += angleDelta;
+		Tga::LinePrimitive line;
+		line.color = color;
+		line.fromPosition = lastPos;
+		lastPos = Tga::Vector3f(cu::Vector3<float>(std::cos(angle), std::sin(angle), 0.f) * radius + center);
+		line.toPosition = lastPos;
 
-		instance.mySize = Tga::Vector2f(diameter * x, diameter * y);
-		GameWorld::GetInstance()->GetRenderBuffer().Push({}, instance, 100);
+		myTransform.lock()->GetSpaceRenderBuffer()->Push(line, 1000);
 	}
 #endif // _DEBUG
 

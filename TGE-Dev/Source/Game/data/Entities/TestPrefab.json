@@ -1,1 +1,1 @@
-{"Children":[],"Components":[{"Data":{"Translation":[-97.0,103.0,0.0]},"Type":"Transform"},{"Data":{"Color":[0.6602316498756409,1.0,0.8150295615196228,1.0],"Texture":"Sprites\\t_playerPlaceholder_2.png"},"Type":"SpriteRenderer2D"}],"IsPrefab":false,"Name":"N/A"}
+{"Children":[{"Children":[],"Components":[],"Name":"2"}],"Components":[],"Name":"1"}

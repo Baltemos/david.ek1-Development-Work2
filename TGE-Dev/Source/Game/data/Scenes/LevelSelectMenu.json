@@ -1,0 +1,1 @@
+{"Batch":[{"Children":[],"Components":[{"Data":{},"Type":"Transform"},{"Data":{},"Type":"UIManager"}],"Name":"Instance - Level Select Menu","PrefabPath":"Entities/Level_Select_Menu.json"},{"Children":[],"Components":[{"Data":null,"Type":"Transform"},{"Data":null,"Type":"Camera"}],"Name":"Camera"}],"UnityBatch":[]}

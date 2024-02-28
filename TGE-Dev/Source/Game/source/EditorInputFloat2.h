@@ -4,5 +4,5 @@
 class EditorInputFloat2 : public ValueEditor
 {
 public:
-	virtual bool OnEditValue(const std::string& aKey, const nlohmann::json& aDefault, nlohmann::json& aOverride, const nlohmann::json& aEditorData) override;
+	virtual bool OnEditValue(nlohmann::json& aOverride, EditorRegistry& aEditorRegistry) override;
 };

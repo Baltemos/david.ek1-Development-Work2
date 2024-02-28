@@ -1,3 +1,6 @@
 {
-      "MovementSpeed": 400.0
+      "MovementSpeed": 1.0,
+  "AttackRange" : 120,
+  "AttackCooldown": 0.4,
+    "JumpSpeed": 400.0
 }

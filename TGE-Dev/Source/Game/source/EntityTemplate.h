@@ -6,23 +6,27 @@
 
 class EntityPrefab;
 
-class EntityTemplate2
+class EntityTemplate
 {
 public:
-	EntityTemplate2();
-	EntityTemplate2(const std::string& aPrefabPath);
-	EntityTemplate2(const EntityTemplate2& aEntity);
-	~EntityTemplate2();
+	EntityTemplate();
+	EntityTemplate(const std::string& aPrefabPath);
+	EntityTemplate(const EntityTemplate& aEntity);
+	~EntityTemplate();
 
-	EntityTemplate2& operator=(const EntityTemplate2& aEntity);
+	EntityTemplate& operator=(const EntityTemplate& aEntity);
 
 	void SetName(const std::string& aName);
 	const std::string& GetName() const;
 
+	ComponentTemplate GetComponent(std::string aType) const;
+
 	std::vector<ComponentTemplate> GetComponents() const;
 	std::vector<ComponentTemplate>& GetRawComponents();
-	std::vector<EntityTemplate2> GetChildren() const;
-	std::vector<EntityTemplate2>& GetRawChildren();
+	std::vector<EntityTemplate> GetChildren() const;
+	std::vector<EntityTemplate>& GetRawChildren();
+	const std::vector<EntityTemplate>& GetRawChildren() const;
+	std::vector<EntityTemplate> GetPrefabChildren() const;
 
 	const EntityPrefab* GetPrefab() const;
 
@@ -31,7 +35,7 @@ public:
 
 	//If this template is an instance of a prefab. Prefab instances cannot have components or children added to them.
 	bool IsPrefabInstance() const;
-	EntityTemplate2 GetIndependent() const;
+	EntityTemplate GetIndependent() const;
 
 	//Overwrites prefab with this instance. Effectively updating the overrides of the prefab.
 	void OverwritePrefab();
@@ -41,19 +45,21 @@ public:
 	void Load(const nlohmann::json& someData);
 	void Reload();
 
-	void AddComponent(const std::string& aType, const nlohmann::json& someOverrides = nlohmann::json(nlohmann::detail::value_t::null));
+	void AddComponent(const std::string& aType, const nlohmann::json& someOverrides = nlohmann::json(nlohmann::detail::value_t::object));
 
 	bool TryAddComponent(const ComponentTemplate& aComponent);
 	bool TryEraseComponent(size_t aIndex);
-	bool TryAddChild(const EntityTemplate2& aEntity);
+	bool TryAddChild(const EntityTemplate& aEntity);
 
 private:
-	void InitBlankPrefabInstance();
+	nlohmann::json FetchComponent(const std::string& aType, const nlohmann::json& aComponents);
+
+	void InitBlankPrefabInstance(const nlohmann::json& aOptTransformOverride = nlohmann::json(nlohmann::detail::value_t::object));
 
 	std::string myName;
 	EntityPrefab* myPrefab;
 	std::vector<ComponentTemplate> myComponents;
-	std::vector<EntityTemplate2> myChildren;
+	std::vector<EntityTemplate> myChildren;
 };
 
 class EntityPrefab
@@ -61,19 +67,21 @@ class EntityPrefab
 public:
 	void Load(const std::string& aAssetPath);
 	void Reload();
-	void Overwrite(const EntityTemplate2& aEntity);
+	void Overwrite(const EntityTemplate& aEntity);
 
 	std::vector<ComponentTemplate> GetComponents() const;
 	std::vector<ComponentTemplate>& GetRawComponents();
-	std::vector<EntityTemplate2> GetChildren() const;
+	std::vector<EntityTemplate> GetChildren() const;
 
-	const EntityTemplate2& GetTemplate() const;
+	const EntityTemplate& GetTemplate() const;
 
 	const std::string& GetPath() const;
 
+	bool Empty() const;
+
 private:
 	std::string myPath;
-	EntityTemplate2 myPrefab;
+	EntityTemplate myPrefab;
 };
 
 //class EntityPrefab

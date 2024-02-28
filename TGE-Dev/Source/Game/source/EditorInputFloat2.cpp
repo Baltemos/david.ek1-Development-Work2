@@ -2,9 +2,9 @@
 #include "JsonUtil.h"
 #include <imgui/imgui.h>
 
-bool EditorInputFloat2::OnEditValue(const std::string& aKey, const nlohmann::json& aDefault, nlohmann::json& aOverride, const nlohmann::json& aEditorData)
+bool EditorInputFloat2::OnEditValue(nlohmann::json& aOverride, EditorRegistry&)
 {
-	nlohmann::json current = JsonMerge(aDefault, aOverride, true);
+	nlohmann::json current = GetValue(GetDefaultValue(), aOverride);
 	float values[2];
 	for (size_t index = 0; index < 2; index++)
 	{
@@ -18,7 +18,7 @@ bool EditorInputFloat2::OnEditValue(const std::string& aKey, const nlohmann::jso
 		}
 	}
 
-	if (ImGui::InputFloat2(aKey.c_str(), values, aEditorData["Format"].get<std::string>().c_str()))
+	if (ImGui::InputFloat2(GetKey().c_str(), values, GetData()["Format"].get<std::string>().c_str()))
 	{
 		aOverride = nlohmann::json(nlohmann::detail::value_t::array);
 		aOverride += values[0];

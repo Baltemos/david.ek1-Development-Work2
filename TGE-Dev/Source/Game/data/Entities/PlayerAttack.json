@@ -1,0 +1,1 @@
+{"Children":[],"Components":[{"Data":null,"Type":"Transform"},{"Data":{"Texture":"Sprites\\s_effect_slash.png"},"Type":"SpriteRenderer2D"},{"Data":{"IsTrigger":true},"Type":"CircleCollider"},{"Data":{"Timer":0.30000001192092896},"Type":"ExpirationTimer"},{"Data":{"Tag":"Attack"},"Type":"Tag"},{"Data":{"Tag":"Friendly"},"Type":"Tag"}],"Name":"PlayerAttack"}

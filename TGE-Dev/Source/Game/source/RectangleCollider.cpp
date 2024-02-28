@@ -26,12 +26,24 @@ void RectangleCollider::Update(float)
 	UpdateBounds();
 
 #ifdef _DEBUG
-	Tga::Sprite2DInstanceData instance;
-	instance.myPosition = Tga::Vector2f(GetWorldBounds().Min);
-	instance.myPivot = { 0, 1 };
-	instance.mySize = Tga::Vector2f(GetWorldBounds().Max - GetWorldBounds().Min);
-	instance.myColor = { 1, 0, 0, 0.5f };
-	GameWorld::GetInstance()->GetRenderBuffer().Push({}, instance, 100);
+	Tga::Vector4f color = { 1.f, 0.f, 0.f, 1.f };
+
+	Tga::Vector3f max = Tga::Vector3f(cu::Vector3<float>(GetWorldBounds().Max, 0.f));
+	Tga::Vector3f min = Tga::Vector3f(cu::Vector3<float>(GetWorldBounds().Min, 0.f));
+
+	Tga::Vector3f sizeY = { 0, max.y - min.y, 0 };
+
+	Tga::LinePrimitive l1 { color, min, (min + sizeY) };
+	Tga::LinePrimitive l2 { color, (min + sizeY), max };
+	Tga::LinePrimitive l3 { color, max, max - sizeY };
+	Tga::LinePrimitive l4 { color, max - sizeY, min };
+
+	RenderBuffer* renderBuffer = myTransform.lock()->GetSpaceRenderBuffer();
+
+	renderBuffer->Push(l1, 1000);
+	renderBuffer->Push(l2, 1000);
+	renderBuffer->Push(l3, 1000);
+	renderBuffer->Push(l4, 1000);
 #endif
 }
 

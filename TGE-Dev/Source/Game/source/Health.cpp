@@ -5,20 +5,40 @@
 void Health::Read(const nlohmann::json& someData)
 {
 	myMaxHP = someData["MaxHP"];
+	myInvulnerabilityDuration = someData["InvulnerabilityDuration"];
+	myInvulnerabilityTimer = myInvulnerabilityDuration;
 	myCurrentHP = myMaxHP;
 	//GetEntity()->GetComponent<CreatureInput>()->GetOnMoveHorizontal().Subscribe(this, &CreatureMovementObserver::onMoveHorizontal);
 	GetEntity()->GetComponent<Collider>()->OnCollision.Subscribe(this, &Health::GetOnCollision);
 }
 
-bool Health::TakeDamage(const int someDamage) 
+void Health::Update(float aDeltaTime)
 {
-	myCurrentHP -= someDamage;
-	if (myCurrentHP <= 0)
+	myInvulnerabilityTimer += aDeltaTime;
+}
+
+bool Health::TakeDamage(const int someDamage)
+{
+	if (myInvulnerabilityTimer > myInvulnerabilityDuration)
 	{
-		myIsAlive = false;
-		GetEntity()->Destroy();
+		myCurrentHP -= someDamage;
+		if (myCurrentHP <= 0)
+		{
+			myIsAlive = false;
+			GetEntity()->Destroy();
+		}
+		myInvulnerabilityTimer = 0;
 	}
 	return myIsAlive;
+}
+
+void Health::Heal(const int someHealing)
+{
+	myCurrentHP += someHealing;
+	if (myCurrentHP > myMaxHP)
+	{
+		myCurrentHP = myMaxHP;
+	}
 }
 
 void Health::GetOnCollision(const CollisionInfo2D& aInfo)
@@ -35,8 +55,14 @@ void Health::GetOnCollision(const CollisionInfo2D& aInfo)
 	std::shared_ptr<Entity> other = aInfo.OtherCollider->GetEntity();
 	if (other != nullptr)
 	{
-		if (Tag::HasTag(other, "Hostile") && Tag::HasTag(GetEntity(), "Friendly")/* && Tag::HasTag(GetEntity(), "Player") == false*/ ||
-			(Tag::HasTag(other, "Friendly") && Tag::HasTag(other, "Player") == false && Tag::HasTag(GetEntity(), "Hostile")))
+		if (Tag::HasTag(other, "HealthPickup") && Tag::HasTag(GetEntity(), "Player"))
+		{
+			Heal(1);
+			other->Destroy();
+		}
+		else if (Tag::HasTag(other, "Hostile") && Tag::HasTag(GetEntity(), "Friendly")/* && Tag::HasTag(GetEntity(), "Player") == false*/ ||
+			(Tag::HasTag(other, "Friendly") && Tag::HasTag(other, "Player") == false && Tag::HasTag(GetEntity(), "Hostile")) ||
+			(Tag::HasTag(other, "Hostile") == false && Tag::HasTag(GetEntity(), "RangedAttack")))
 		{
 			TakeDamage(1);
 		}

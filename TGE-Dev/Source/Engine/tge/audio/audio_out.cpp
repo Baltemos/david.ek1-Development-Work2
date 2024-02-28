@@ -150,13 +150,14 @@ void AudioOut::SetPosition(const Handle& hndl, Vector2f aPosition)
 
 // Loads sample by filename, saves to loaded_ vector and return its handle
 
-long AudioOut::Load(const std::string& fname, bool repeat)
+long AudioOut::Load(const std::string& fname, bool repeat, int aAmountOfChannels)
 {
   // Check if already loaded
 
   Handle hndl = FindLoaded(fname);
   if (hndl)
-    return audio_helpers::PrintGeneralError(fname + String(" already loaded"));    
+	  return hndl;
+    //return audio_helpers::PrintGeneralError(fname + String(" already loaded"));    
 
   // Create new sample
 
@@ -165,7 +166,7 @@ long AudioOut::Load(const std::string& fname, bool repeat)
     flags = BASS_SAMPLE_LOOP;
   else
     flags = BASS_SAMPLE_8BITS + BASS_SAMPLE_OVER_POS;
-  hndl = BASS_SampleLoad(FALSE, fname.c_str(), 0,0,3, flags);
+  hndl = BASS_SampleLoad(FALSE, fname.c_str(), 0,0, aAmountOfChannels, flags);
 
   // Add sample to container
 

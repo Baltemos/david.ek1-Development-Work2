@@ -18,13 +18,13 @@ Audio::~Audio()
 
 }
 
-void Audio::Init(const char * aPath, bool aIsLooping)
+void Audio::Init(const char * aPath, bool aIsLooping, int aAmountOfChannels)
 {
 	if (!myAudioOut)
 	{
 		myAudioOut = new Tga::AudioOut();
 	}
-	myLoadedAudio = myAudioOut->Load(Tga::Settings::ResolveAssetPath(aPath), aIsLooping);
+	myLoadedAudio = myAudioOut->Load(Tga::Settings::ResolveAssetPath(aPath), aIsLooping, aAmountOfChannels);
 	
 }
 

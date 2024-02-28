@@ -7,12 +7,15 @@
 void CreatureMovementObserver::Read(const nlohmann::json& someData)
 {
 	myMaxJumpChargeTime = someData["MaxJumpChargeTime"];
+	myAttackCooldown = someData["AttackCooldown"];
+	myAttackTimer = myAttackCooldown;
 	myJumpChargeTimer = 0;
-	myTransform = GetEntity()->GetComponent<Transform>();
 }
 
 void CreatureMovementObserver::Start()
 {
+	myTransform = GetEntity()->GetComponent<Transform>();
+
 	myIsGrounded = false;
 	myIsGroundedCheck = false;
 
@@ -24,15 +27,15 @@ void CreatureMovementObserver::Start()
 	GetEntity()->GetComponent<CreatureInput>()->GetOnAttack().Subscribe(this, &CreatureMovementObserver::onAttack);
 	myEntityDirection = GetEntity()->GetComponent<CreatureInput>()->GetDirectionSharedPointer();
 
-
 	for (auto& collider : GetEntity()->GetComponents<Collider>())
 	{
 		collider->OnCollision.Subscribe(this, &CreatureMovementObserver::onCollision);
 	}
 }
 
-void CreatureMovementObserver::Update(float)
+void CreatureMovementObserver::Update(const float aDeltaTime)
 {
+	myAttackTimer += aDeltaTime;
 	myIsGrounded = myIsGroundedCheck;
 	myIsGroundedCheck = false;
 }
@@ -53,10 +56,6 @@ void CreatureMovementObserver::onCollision(const CollisionInfo2D& aInfo)
 void CreatureMovementObserver::onMoveHorizontal(int aDirection, float aSpeed)
 {
 	std::shared_ptr<Physicbody> body = myPhysicbody.lock();
-	if (body->GetIsDashing())
-	{
-		return;
-	}
 	body->SetVelocity(CommonUtilities::Vector2<float>(aDirection * aSpeed, body->GetVelocity().y));
 	GetEntity()->GetComponent<CreatureInput>()->SetDirectionSharedPointer(aDirection);
 	//std::cout << "[CreatureMovementObserver]: Moved = " << aDirection << std::endl;
@@ -64,18 +63,18 @@ void CreatureMovementObserver::onMoveHorizontal(int aDirection, float aSpeed)
 
 void CreatureMovementObserver::onJump(float aDeltaTime, float aSpeed)
 {
-	aDeltaTime;
 	aSpeed;
-	if (myIsGrounded)
-	{
-		myJumpChargeTimer = 0;
-	}
-	if (myJumpChargeTimer < myMaxJumpChargeTime)
-	{
-		myJumpChargeTimer += aDeltaTime;
-		std::shared_ptr<Physicbody> body = myPhysicbody.lock();
-		body->SetVelocity(CommonUtilities::Vector2<float>(body->GetVelocity().x, aSpeed));
-	}
+	aDeltaTime;
+	//if (myIsGrounded)
+	//{
+	//	myJumpChargeTimer = 0;
+	//}
+	//if (myJumpChargeTimer < myMaxJumpChargeTime)
+	//{
+	//	myJumpChargeTimer += aDeltaTime;
+	//	std::shared_ptr<Physicbody> body = myPhysicbody.lock();
+	//	body->SetVelocity(CommonUtilities::Vector2<float>(body->GetVelocity().x, aSpeed));
+	//}
 }
 
 void CreatureMovementObserver::onLetGoOfJump()
@@ -85,5 +84,8 @@ void CreatureMovementObserver::onLetGoOfJump()
 
 void CreatureMovementObserver::onAttack(/*int aDirection, */ float aDeltaTime, float anAttackRange)
 {
-	myPhysicbody.lock()->AddVelocity(CommonUtilities::Vector3<float>(*myEntityDirection * aDeltaTime, anAttackRange /** aDirection*/, 0));//Lava flow. Make pure virtual?
+	aDeltaTime;
+	anAttackRange;
+
+	//myPhysicbody.lock()->AddVelocity(CommonUtilities::Vector3<float>(*myEntityDirection * aDeltaTime, anAttackRange /** aDirection*/, 0));//Lava flow. Make pure virtual?
 }

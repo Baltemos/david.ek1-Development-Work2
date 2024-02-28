@@ -11,6 +11,11 @@ Camera::Camera()
 	myIsActive = false;
 }
 
+Camera::~Camera()
+{
+
+}
+
 std::multiset<Camera*> Camera::GetCameras()
 {
 	return locCameras;
@@ -71,8 +76,8 @@ cu::Matrix4x4<float> Camera::GetMatrix() const
 	matrix = matrix.GetInverse();
 	matrix(4, 1) += myProjection.GetRowVectors()[0].Length() / projection.GetRowVectors()[0].Length();
 	matrix(4, 2) += myProjection.GetRowVectors()[1].Length() / projection.GetRowVectors()[1].Length();
-	matrix(4, 1) = std::floor(matrix(4, 1));
-	matrix(4, 2) = std::floor(matrix(4, 2));
+	//matrix(4, 1) = std::floor(matrix(4, 1));
+	//matrix(4, 2) = std::floor(matrix(4, 2));
 	return matrix;
 }
 
@@ -93,9 +98,9 @@ cu::Vector3<float> Camera::ScreenToWorld(cu::Vector3<float> aScreenPosition) con
 	cu::Vector3<float> renderSize = { static_cast<float>(tRenderSize.x), static_cast<float>(tRenderSize.y), 1.f };
 	cu::Vector3<float> windowSize(GameWorld::GetInstance()->GetViewportSize(), 1.f);
 
+	aScreenPosition.y = windowSize.y - aScreenPosition.y;
 	aScreenPosition *= renderSize / windowSize;
 
-	aScreenPosition.y = renderSize.y - aScreenPosition.y;
 	cu::Vector4<float> worldPos = cu::Vector4<float>(aScreenPosition, 1) * GetMatrix().GetInverse();
 	return cu::Vector3<float>(worldPos.x, worldPos.y, worldPos.z);
 }

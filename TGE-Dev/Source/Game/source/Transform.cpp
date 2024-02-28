@@ -1,6 +1,7 @@
 #include "Transform.h"
 #include "Entity.h"
 #include "GameWorld.h"
+#include "Camera.h"
 
 Transform::Transform()
 {
@@ -20,6 +21,8 @@ void Transform::Read(const nlohmann::json& someData)
 	myEuler.y = rotation[1];
 	myEuler.z = rotation[2];
 
+	SetSpace(static_cast<Space>(someData["Space"].get<int>()));
+
 	Recalculate();
 }
 
@@ -29,9 +32,16 @@ void Transform::OnDestroy()
 	{
 		SetParent(nullptr, false);
 	}
-	for (Transform* child : myChildren)
+	for (std::weak_ptr<Transform> child : myChildren)
 	{
-		child->GetEntity()->Destroy();
+		if (child.expired() == false)
+		{
+			std::shared_ptr<Transform> transform = child.lock();
+			if (transform->IsDestroyed() == false)
+			{
+				transform->GetEntity()->Destroy();
+			}
+		}
 	}
 }
 
@@ -64,6 +74,27 @@ void Transform::SetWorldPosition(const cu::Vector3<float>& aPosition)
 void Transform::MoveWorldPosition(const cu::Vector3<float>& aVector)
 {
 	SetWorldPosition(GetLocalPosition() + aVector);
+}
+
+void Transform::SetSpace(Transform::Space aSpace)
+{
+	GetRoot()->PropegateSpace(aSpace);
+}
+
+Transform::Space Transform::GetSpace() const
+{
+	return mySpace;
+}
+
+RenderBuffer* Transform::GetSpaceRenderBuffer()
+{
+	GameWorld* gameWorld = GameWorld::GetInstance();
+	switch (mySpace)
+	{
+	case Space::eWorld: return &gameWorld->GetRenderBuffer();
+	case Space::eUserInterface: return &gameWorld->GetUIRenderBuffer();
+	default: return nullptr;
+	}
 }
 
 cu::Vector3<float> Transform::GetLocalRight()
@@ -150,13 +181,41 @@ cu::Vector3<float> Transform::WorldToLocal(const cu::Vector3<float>& aWorld) con
 	return cu::Vector3<float>(vec.x, vec.y, vec.z);
 }
 
-void Transform::SetParent(Transform* aParent, bool aKeepWorldSpace)
+cu::Vector3<float> Transform::ScreenToWorld(const cu::Vector2<float>& aScreen) const
 {
+	switch (mySpace)
+	{
+	case Space::eWorld: {
+
+		Camera* activeCamera = Camera::GetActiveCamera();
+		if (activeCamera)
+		{
+			return activeCamera->ScreenToWorld({ static_cast<float>(aScreen.x), static_cast<float>(aScreen.y), 0 });
+		}
+		else return { NAN, NAN, NAN };
+		break;
+	}
+	case Space::eUserInterface: {
+		Tga::Vector2ui resolution = GameWorld::GetInstance()->GetResolution();
+		cu::Vector2<float> viewportSize = GameWorld::GetInstance()->GetViewportSize();
+		return cu::Vector3<float>(cu::Vector2<float>(aScreen.x, viewportSize.y - aScreen.y) * cu::Vector2<float>(static_cast<float>(resolution.x), static_cast<float>(resolution.y)) / viewportSize, 0.f);
+	}
+	default: return { NAN, NAN, NAN };
+	}
+}
+
+void Transform::SetParent(std::shared_ptr<Transform> aParent, bool aKeepWorldSpace)
+{
+	if (aParent != nullptr && IsDestroyed())
+	{
+		return;
+	}
+
 	if (this->myParent != nullptr)
 	{
 		for (auto it = this->myParent->myChildren.begin(); it != this->myParent->myChildren.end(); it++)
 		{
-			if (*it == this)
+			if ((*it).lock().get() == this)
 			{
 				this->myParent->myChildren.erase(it);
 				break;
@@ -164,10 +223,11 @@ void Transform::SetParent(Transform* aParent, bool aKeepWorldSpace)
 		}
 	}
 
-	this->myParent = aParent;
-	if (aParent != nullptr)
+	this->myParent = nullptr;
+	if (aParent != nullptr && aParent->IsDestroyed() == false)
 	{
-		aParent->myChildren.push_back(this);
+		this->myParent = aParent;
+		aParent->myChildren.push_back(std::dynamic_pointer_cast<Transform>(GetSharedPtr()));
 	}
 
 	if (aKeepWorldSpace)
@@ -178,6 +238,20 @@ void Transform::SetParent(Transform* aParent, bool aKeepWorldSpace)
 	{
 		Recalculate();
 	}
+}
+
+std::shared_ptr<Transform> Transform::GetParent() const
+{
+	return myParent;
+}
+
+std::shared_ptr<Transform> Transform::GetRoot()
+{
+	if (myParent)
+	{
+		return myParent->GetRoot();
+	}
+	return std::dynamic_pointer_cast<Transform>(GetSharedPtr());
 }
 
 cu::Matrix4x4<float> Transform::GetSummedMatrix() const
@@ -205,7 +279,7 @@ cu::Matrix4x4<float> Transform::GetRotation() const
 	return myRotation;
 }
 
-const std::vector<Transform*>& Transform::GetChildren() const
+const std::vector<std::weak_ptr<Transform>>& Transform::GetChildren() const
 {
 	return myChildren;
 }
@@ -240,8 +314,19 @@ void Transform::Recalculate()
 
 	this->myWorldPosition = LocalToWorld(cu::Vector3<float>());
 
-	for (Transform* transform : this->myChildren)
+	for (std::weak_ptr<Transform> transform : this->myChildren)
 	{
-		transform->Recalculate();
+		transform.lock()->Recalculate();
+	}
+
+	OnValueChanged(*this);
+}
+
+void Transform::PropegateSpace(Space aSpace)
+{
+	mySpace = aSpace;
+	for (auto& child : myChildren)
+	{
+		child.lock()->PropegateSpace(aSpace);
 	}
 }

@@ -5,10 +5,10 @@
 #include "CircleCollider.h"
 #include <CommonUtilities/Intersection.hpp>
 
-static std::vector<Collider*> locColliders;
-static std::vector<Collider*> locStaticColliders;
+static std::vector<std::shared_ptr<Collider>> locColliders;
+static std::vector<std::shared_ptr<Collider>> locStaticColliders;
 
-void Collider::CheckCollision(Collider* aCollider1, Collider* aCollide2)
+void Collider::CheckCollision(std::shared_ptr<Collider> aCollider1, std::shared_ptr<Collider> aCollide2)
 {
 	if (aCollider1->PreliminaryCheck(aCollide2))
 	{
@@ -29,7 +29,7 @@ void Collider::RunCollisions()
 		std::remove_if(
 			locColliders.begin(),
 			locColliders.end(),
-			[](Collider* collider) {
+			[](std::shared_ptr<Collider> collider) {
 				return collider->IsDestroyed();
 			}
 		),
@@ -40,14 +40,14 @@ void Collider::RunCollisions()
 		std::remove_if(
 			locStaticColliders.begin(),
 			locStaticColliders.end(),
-			[](Collider* collider) {
+			[](std::shared_ptr<Collider> collider) {
 				return collider->IsDestroyed();
 			}
 		),
 		locStaticColliders.end()
 	);
 
-	Collider* collider1, * collider2;
+	std::shared_ptr<Collider> collider1, collider2;
 	auto it1 = locColliders.begin();
 	while (it1 < locColliders.end())
 	{
@@ -111,10 +111,10 @@ bool Collider::IsTrigger() const
 
 #define ColliderHash(type1, type2) (static_cast<int>(type1) | (static_cast<int>(type2) << 16))
 
-CollisionInfo2D Collider::Intersects(Collider* aCollider)
+CollisionInfo2D Collider::Intersects(std::shared_ptr<Collider> aCollider)
 {
 	CollisionInfo2D info;
-	info.OurCollider = this;
+	info.OurCollider = std::dynamic_pointer_cast<Collider>(GetSharedPtr());
 	info.OtherCollider = aCollider;
 
 	bool swapped = false;
@@ -126,8 +126,8 @@ CollisionInfo2D Collider::Intersects(Collider* aCollider)
 	{
 	case ColliderHash(ColliderType::eRectangle, ColliderType::eRectangle):
 	{
-		RectangleCollider* ourRect = dynamic_cast<RectangleCollider*>(info.OurCollider);
-		RectangleCollider* otherRect = dynamic_cast<RectangleCollider*>(info.OtherCollider);
+		std::shared_ptr<RectangleCollider> ourRect = std::dynamic_pointer_cast<RectangleCollider>(info.OurCollider);
+		std::shared_ptr<RectangleCollider> otherRect = std::dynamic_pointer_cast<RectangleCollider>(info.OtherCollider);
 
 		cu::AABB2D<float> bounds = ourRect->GetWorldBounds();
 		cu::AABB2D<float> obounds = otherRect->GetWorldBounds();
@@ -154,8 +154,8 @@ CollisionInfo2D Collider::Intersects(Collider* aCollider)
 	}
 	case ColliderHash(ColliderType::eCircle, ColliderType::eCircle):
 	{
-		CircleCollider* ourCircle = dynamic_cast<CircleCollider*>(info.OurCollider);
-		CircleCollider* otherCircle = dynamic_cast<CircleCollider*>(info.OtherCollider);
+		std::shared_ptr<CircleCollider> ourCircle = std::dynamic_pointer_cast<CircleCollider>(info.OurCollider);
+		std::shared_ptr<CircleCollider> otherCircle = std::dynamic_pointer_cast<CircleCollider>(info.OtherCollider);
 
 		cu::Circle<float> bounds = ourCircle->GetWorldBounds();
 		cu::Circle<float> obounds = otherCircle->GetWorldBounds();
@@ -180,8 +180,8 @@ CollisionInfo2D Collider::Intersects(Collider* aCollider)
 		[[fallthrough]];
 	case ColliderHash(ColliderType::eCircle, ColliderType::eRectangle):
 	{
-		CircleCollider* ourCircle = dynamic_cast<CircleCollider*>(info.OurCollider);
-		RectangleCollider* otherRect = dynamic_cast<RectangleCollider*>(info.OtherCollider);
+		std::shared_ptr<CircleCollider> ourCircle = std::dynamic_pointer_cast<CircleCollider>(info.OurCollider);
+		std::shared_ptr<RectangleCollider> otherRect = std::dynamic_pointer_cast<RectangleCollider>(info.OtherCollider);
 
 		cu::Circle<float> bounds = ourCircle->GetWorldBounds();
 		cu::AABB2D<float> obounds = otherRect->GetWorldBounds();
@@ -221,7 +221,7 @@ void Collider::Read(const nlohmann::json& someData)
 
 void Collider::Start()
 {
-	locColliders.push_back(this);
+	locColliders.push_back(std::dynamic_pointer_cast<Collider>(GetSharedPtr()));
 }
 
 void Collider::SetType(ColliderType aType)
@@ -244,7 +244,7 @@ cu::Circle<float> Collider::GetBoundingCircle() const
 	return myBoundingCircle;
 }
 
-bool Collider::PreliminaryCheck(Collider* aCollider) const
+bool Collider::PreliminaryCheck(std::shared_ptr<Collider> aCollider) const
 {
 	float distanceSqr = myBoundingCircle.GetRadius() + aCollider->myBoundingCircle.GetRadius();
 	distanceSqr *= distanceSqr;

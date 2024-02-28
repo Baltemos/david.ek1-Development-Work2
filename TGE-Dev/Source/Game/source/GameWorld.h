@@ -16,7 +16,6 @@
 #include "ComponentRegistry.h"
 #include "EditorRegistry.h"
 #include <tge/sprite/sprite.h>
-#include "SpriteManager.h"
 #include "RenderBuffer.h"
 #include "MeleeEnemyObserver.h"
 #include "RangedEnemyObserver.h"
@@ -24,6 +23,9 @@
 #include "RangedCrab.h"
 #include "Health.h"
 #include "ExpirationTimer.h"
+#include "EntityTemplate.h"
+#include "Projectile.h"
+#include "AudioManager.h"
 
 namespace cu = CommonUtilities;
 
@@ -50,8 +52,9 @@ public:
 	EntityManager& GetEntityManager();
 	ComponentRegistry& GetComponentRegistry();
 	EditorRegistry& GetEditorRegistry();
-	SpriteManager& GetSpriteManager();
 	RenderBuffer& GetRenderBuffer();
+	RenderBuffer& GetUIRenderBuffer();
+	AudioManager& GetAudioManager();
 
 	cu::Vector2<float> GetViewportSize() const;
 	Tga::Vector2ui GetResolution() const;
@@ -64,6 +67,8 @@ public:
 	void Init();
 	void Update(float aTimeDelta);
 	void Render();
+	void LoadScene(const std::string& aSceneAssetPath);
+	void LoadSceneAbsolute(const std::string& aScenePath);
 
 	void ReadFromFile(/*const Tga::Engine& anEngine*/); //Note: Engine should be included, but warning level 4 will prevent it from remaining unused
 	std::vector<Image> CreateImageVectorFromFile(const Tga::Engine& anEngine, const std::string& aPath);
@@ -73,8 +78,9 @@ private:
 	EntityManager myEntityManager;
 	ComponentRegistry myComponentRegistry;
 	EditorRegistry myEditorRegistry;
-	SpriteManager mySpriteManager;
 	RenderBuffer myRenderBuffer;
+	RenderBuffer myUIRenderBuffer;
+	AudioManager myAudioManager;
 
 	Tga::RenderTarget myGameRenderTarget;
 	Tga::Vector2ui myResolution;

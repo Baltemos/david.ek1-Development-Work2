@@ -21,5 +21,15 @@
       "Max": 3.14159265359,
       "Format": "%.3f"
     }
+  },
+  "Entity/Transform/Space": {
+    "Type": "Enum",
+    "Data": {
+      "Name": "Space",
+      "Enums": {
+        "World": 0,
+        "User Unterface": 1
+      }
+    }
   }
 }

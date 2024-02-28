@@ -1,6 +1,7 @@
 #pragma once
 #include "Component.h"
 #include "CreatureInput.h"
+#include "Transform.h"
 
 class RangedCrab : public CreatureInput
 {
@@ -11,5 +12,7 @@ protected:
 	void Update(float aDeltaTime) override;
 
 private:
+	std::shared_ptr<Transform> myPlayerTransform;
+	std::weak_ptr<Transform> myTransform;
 };
 

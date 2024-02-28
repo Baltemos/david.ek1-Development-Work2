@@ -1,0 +1,1 @@
+{"Children":[],"Components":[{"Data":{"Translation":[74.67581176757813,20.603363037109375,0.0]},"Type":"Transform"},{"Data":{"Size":[20.0,20.0],"Texture":"Sprites\\test_sprite.dds"},"Type":"SpriteRenderer2D"},{"Data":{"Bounds":{"Max":[11,11],"Min":[-10,-9]},"IsStatic":true,"IsTrigger":true},"Type":"RectangleCollider"},{"Data":{"Tag":"Key"},"Type":"Tag"}],"Name":"Key"}

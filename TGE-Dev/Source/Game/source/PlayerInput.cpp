@@ -11,9 +11,14 @@ void PlayerInput::Start()
 void PlayerInput::Read(const nlohmann::json& someData)
 {
 	CreatureInput::Read(someData);
+	myMaxJumps = 1; //set to 1
+	myUnlockedDash = false; //set to false
 	myMovementSpeed = someData["MovementSpeed"];
 	myJumpSpeed = someData["JumpSpeed"];
 	GetEntity()->GetComponent<Collider>()->OnCollision.Subscribe(this, &PlayerInput::GetOnCollision);
+	myShouldResetJumps = false;
+	myHasKey = false;
+	myMapToLoad = "";
 }
 
 void PlayerInput::Update(float aDeltaTime)
@@ -36,22 +41,37 @@ void PlayerInput::Update(float aDeltaTime)
 		GetOnLookVertical()(yDirection);
 	}
 
-	if (myInputHandler->IsKeyPressed(static_cast<int>(CommonUtilities::Keys::SPACE)))
+	if (myInputHandler->IsKeyDown(static_cast<int>(CommonUtilities::Keys::SPACE)))
+	{
+  		//myJumpsLeft--;
+	}
+	if (myInputHandler->IsKeyPressed(static_cast<int>(CommonUtilities::Keys::SPACE)) && myJumpsLeft > 0)
 	{
 		GetOnJump()(aDeltaTime, myJumpSpeed);
 	}
 	else if (myInputHandler->IsKeyUp(static_cast<int>(CommonUtilities::Keys::SPACE)))
 	{
+		myJumpsLeft--;
 		GetOnLetGoOfJump()();
+		//if (myShouldResetJumps)
+		//{
+		//	myJumpsLeft = myMaxJumps;
+		//}
 	}
 
 	if (myInputHandler->IsKeyDown(static_cast<int>(CommonUtilities::Keys::CONTROL)))
 	{
 		GetOnAttack()(/*0,*/ aDeltaTime, myAttackRange);
 	}
-	if (myInputHandler->IsKeyDown(static_cast<int>(CommonUtilities::Keys::SHIFT)))
+	if (myInputHandler->IsKeyDown(static_cast<int>(CommonUtilities::Keys::SHIFT)) && myUnlockedDash)
 	{
 		GetOnDash()(aDeltaTime);
+	}
+
+	if (myMapToLoad != "")
+	{
+		GameWorld::GetInstance()->LoadScene(myMapToLoad);
+		myMapToLoad = "";
 	}
 }
 
@@ -65,6 +85,37 @@ Event<int>& PlayerInput::GetOnLookVertical()
 	return myOnLookVertical;
 }
 
+void PlayerInput::ResetJumpsLeft()
+{
+	//if (myInputHandler->IsKeyPressed(static_cast<int>(CommonUtilities::Keys::SPACE)))
+	//{
+	//	myShouldResetJumps = true;
+	//}
+	//else
+	//{
+		myJumpsLeft = myMaxJumps;
+		if (myInputHandler->IsKeyPressed(static_cast<int>(CommonUtilities::Keys::SPACE)))
+		{
+			myJumpsLeft++;
+		}
+	//}
+}
+
+void PlayerInput::ReduceJumpsLeft()
+{
+	myJumpsLeft--;
+}
+
+bool PlayerInput::GetHasKey() const
+{
+	return myHasKey;
+}
+
+//std::shared_ptr<int> PlayerInput::AccessJumpsLeft()
+//{
+//	return myJumpsLeft;
+//}
+
 void PlayerInput::GetOnCollision(const CollisionInfo2D& aInfo)
 {
 	std::shared_ptr<Entity> other = aInfo.OtherCollider->GetEntity();
@@ -74,10 +125,34 @@ void PlayerInput::GetOnCollision(const CollisionInfo2D& aInfo)
 		if (Tag::HasTag(other, "DashPickup"))
 		{
 			myUnlockedDash = true;
+			other->Destroy();
 		}
 		if (Tag::HasTag(other, "DoubleJumpPickup"))
 		{
-			myUnlockedDoubleJump = true;
+			myMaxJumps = 2;
+			other->Destroy();
+			//myUnlockedDoubleJump = true;
+		}
+		if (Tag::HasTag(other, "Key"))
+		{
+			myHasKey = true;
+			other->Destroy();
+			//GetEntity()->AddComponent("Tag", {{"Tag", "Attack"}});
+			//myUnlockedDoubleJump = true;
+		}
+		if (Tag::HasTag(other, "Door"))
+		{
+			if (myHasKey)
+			{
+				other->Destroy();
+			}
+			//GetEntity()->AddComponent("Tag", {{"Tag", "Attack"}});
+			//myUnlockedDoubleJump = true;
+		}
+		if (Tag::HasTag(other, "GoalLevel1"))
+		{
+			//Add UI here
+			myMapToLoad = "Scenes/Dexter.json";
 		}
 	}
 }

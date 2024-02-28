@@ -6,5 +6,9 @@
   "TextureRect": [ 0.0, 0.0, 1.0, 1.0 ],
   "Rotation": 0.0,
   "Color": [ 1.0, 1.0, 1.0, 1.0 ],
-  "OrderInLayer": 0
+  "OrderInLayer": 0,
+  "Flipped": {
+    "X": false,
+    "Y": false
+  }
 }
